@@ -2,10 +2,11 @@ package com.haoshuang_34517812.nutritrack.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.haoshuang_34517812.nutritrack.data.repository.CacheResult
+import com.haoshuang_34517812.nutritrack.data.repository.DataSource
 import com.haoshuang_34517812.nutritrack.data.repository.FruityviceRepository
 import com.haoshuang_34517812.nutritrack.data.repository.PatientRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,12 +14,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.net.UnknownHostException
 import javax.inject.Inject
 
 /**
- * ViewModel for the NutriCoach screen handling fruit API data and patient information
+ * ViewModel for the NutriCoach screen handling fruit API data and patient information.
+ * Implements cache-first strategy for fruit data to reduce network requests.
  */
 @HiltViewModel
 class NutriCoachViewModel @Inject constructor(
@@ -34,6 +34,17 @@ class NutriCoachViewModel @Inject constructor(
     private val _fruitQuery = MutableStateFlow("")
     val fruitQuery: StateFlow<String> = _fruitQuery
 
+    // Indicates data source for the last successful fetch
+    private val _dataSource = MutableStateFlow<DataSource?>(null)
+    val dataSource: StateFlow<DataSource?> = _dataSource.asStateFlow()
+
+    init {
+        // Clean up expired cache entries on ViewModel creation
+        viewModelScope.launch {
+            repository.cleanupExpiredCache()
+        }
+    }
+
     /**
      * Updates the current fruit search query
      * @param query The new search query
@@ -43,34 +54,32 @@ class NutriCoachViewModel @Inject constructor(
     }
 
     /**
-     * Searches for fruit information using the current query
+     * Searches for fruit information using cache-first strategy.
+     * 1. First checks Room cache for the fruit
+     * 2. If cached and not expired, returns cached data immediately
+     * 3. If not cached or expired, fetches from network
+     * 4. Caches successful network responses for future use
      */
     fun searchFruit() {
         viewModelScope.launch {
             _fruitUiState.value = FruitUiState.Loading
-            try {
-                // 切 IO 线程做网络
-                val resp = withContext(Dispatchers.IO){
-                    repository.getFruit(_fruitQuery.value.lowercase())
-                }
+            _dataSource.value = null
 
-                // 回到 Main 线程更新 UI 状态
-                if (resp.isSuccessful) {
-                    val body = resp.body()
-                    if (body != null) {
-                        _fruitUiState.value = FruitUiState.Success(body)
-                    } else {
-                        _fruitUiState.value =
-                            FruitUiState.Error("Empty body (HTTP ${resp.code()})")
-                    }
-                } else {
-                    _fruitUiState.value =
-                        FruitUiState.Error("HTTP ${resp.code()} - ${resp.message()}")
+            when (val result = repository.getFruit(_fruitQuery.value)) {
+                is CacheResult.Success -> {
+                    _fruitUiState.value = FruitUiState.Success(result.data)
+                    _dataSource.value = result.source
                 }
-            } catch (e: UnknownHostException) {
-                _fruitUiState.value = FruitUiState.Error("DNS error – check network")
-            } catch (e: Exception) {
-                _fruitUiState.value = FruitUiState.Error(e.localizedMessage ?: "Unknown error")
+                is CacheResult.Error -> {
+                    _fruitUiState.value = FruitUiState.Error(
+                        "HTTP ${result.code} - ${result.message}"
+                    )
+                }
+                is CacheResult.NetworkError -> {
+                    _fruitUiState.value = FruitUiState.Error(
+                        result.exception.localizedMessage ?: "Network error"
+                    )
+                }
             }
         }
     }
@@ -90,7 +99,6 @@ class NutriCoachViewModel @Inject constructor(
      * @return Flow of the user's fruit variations score
      */
     fun getFruitVariationsScore(userId: String): Flow<Double> {
-        // 修正了方法名拼写和返回值（应该是fruitVariantionsScore而不是vegetablesVariantionsScore）
         return patientRepo.getPatientFlow(userId).map { it?.fruitVariantionsScore ?: 0.0 }
     }
 
@@ -109,23 +117,25 @@ class NutriCoachViewModel @Inject constructor(
      * @return Flow of boolean indicating if fruit metrics are below optimal (true if improvement needed)
      */
     fun checkIfFruitScoreNeedsImprovement(userId: String): Flow<Boolean> {
-        // 使用combine操作符一次性获取所有需要的分数，避免多次数据库查询
         return combine(
             getFruitScore(userId),
             getFruitVariationsScore(userId),
             getFruitServeSize(userId)
         ) { fruitScore, fruitVariationsScore, fruitServeSize ->
-            // 如果所有指标都低于阈值，则需要改进
             fruitScore < 5.0 && fruitVariationsScore < 2.5 && fruitServeSize < 1.0
         }
     }
-
-
 
     /**
      * Resets the fruit search state
      */
     fun resetState() {
         _fruitUiState.value = FruitUiState.Initial
+        _dataSource.value = null
     }
+
+    /**
+     * Gets the count of cached fruits
+     */
+    suspend fun getCacheCount(): Int = repository.getCacheCount()
 }

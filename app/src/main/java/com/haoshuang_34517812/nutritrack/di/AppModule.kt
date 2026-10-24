@@ -1,6 +1,7 @@
 package com.haoshuang_34517812.nutritrack.di
 
 import android.content.Context
+import com.haoshuang_34517812.nutritrack.data.room.dao.FruitCacheDao
 import com.haoshuang_34517812.nutritrack.data.room.dao.NutriCoachTipDao
 import com.haoshuang_34517812.nutritrack.data.room.dao.PatientDao
 import com.haoshuang_34517812.nutritrack.data.room.dao.QuestionnaireInfoDao
@@ -40,5 +41,11 @@ object AppModule {
     @Singleton
     fun provideNutriCoachTipDao(database: NutriTrackDatabase): NutriCoachTipDao {
         return database.nutriCoachTipDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFruitCacheDao(database: NutriTrackDatabase): FruitCacheDao {
+        return database.fruitCacheDao()
     }
 }
