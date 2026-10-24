@@ -1,9 +1,9 @@
 [versions]
-agp = "8.8.2"
+agp = "8.13.0"
 converterGson = "2.9.0"
 firebaseBom = "33.13.0"
 generativeai = "0.9.0"
-kotlin = "2.0.21"
+kotlin = "2.2.20"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
