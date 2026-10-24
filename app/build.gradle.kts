@@ -11,9 +11,11 @@ plugins {
 
 }
 
-val file = rootProject.file("local.properties")
+val localPropertiesFile = rootProject.file("local.properties")
 val properties = Properties()
-properties.load(file.inputStream())
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { properties.load(it) }
+}
 
 android {
     namespace = "com.haoshuang_34517812.nutritrack"
@@ -27,7 +29,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "apiKeySafe", properties.getProperty("apikey"))
+        buildConfigField("String", "apiKeySafe", properties.getProperty("apikey") ?: "\"\"")
     }
 
     buildTypes {
