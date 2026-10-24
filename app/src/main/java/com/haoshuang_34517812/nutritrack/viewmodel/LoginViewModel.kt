@@ -523,13 +523,13 @@ class LoginViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repo.getAllPatients().map { patients ->
+            repo.getAllPatients().collect { patients ->
                 val allIds = patients.map { it.userId }
                 val registered = patients.filter { it.passwordHash.isNotBlank() }.map { it.userId }
                 val unregistered = allIds - registered.toSet()
                 _registeredIds.value = registered
                 _unregisteredIds.value = unregistered
-            }.collect {}
+            }
         }
     }
 }

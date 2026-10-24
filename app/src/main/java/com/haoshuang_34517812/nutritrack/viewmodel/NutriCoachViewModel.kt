@@ -2,11 +2,12 @@ package com.haoshuang_34517812.nutritrack.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.haoshuang_34517812.nutritrack.data.repository.CacheResult
 import com.haoshuang_34517812.nutritrack.data.repository.DataSource
+import com.haoshuang_34517812.nutritrack.data.repository.FruitResult
 import com.haoshuang_34517812.nutritrack.data.repository.FruityviceRepository
 import com.haoshuang_34517812.nutritrack.data.repository.PatientRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,10 @@ import javax.inject.Inject
 
 /**
  * ViewModel for the NutriCoach screen handling fruit API data and patient information.
- * Implements cache-first strategy for fruit data to reduce network requests.
+ * Implements Stale-While-Revalidate strategy for optimal UX:
+ * - Shows cached data immediately for fast response
+ * - Refreshes from network in background
+ * - Updates UI when fresh data arrives
  */
 @HiltViewModel
 class NutriCoachViewModel @Inject constructor(
@@ -38,6 +42,13 @@ class NutriCoachViewModel @Inject constructor(
     private val _dataSource = MutableStateFlow<DataSource?>(null)
     val dataSource: StateFlow<DataSource?> = _dataSource.asStateFlow()
 
+    // Indicates if background revalidation is in progress
+    private val _isRevalidating = MutableStateFlow(false)
+    val isRevalidating: StateFlow<Boolean> = _isRevalidating.asStateFlow()
+
+    // Current search job for cancellation
+    private var searchJob: Job? = null
+
     init {
         // Clean up expired cache entries on ViewModel creation
         viewModelScope.launch {
@@ -54,31 +65,43 @@ class NutriCoachViewModel @Inject constructor(
     }
 
     /**
-     * Searches for fruit information using cache-first strategy.
-     * 1. First checks Room cache for the fruit
-     * 2. If cached and not expired, returns cached data immediately
-     * 3. If not cached or expired, fetches from network
-     * 4. Caches successful network responses for future use
+     * Searches for fruit using Stale-While-Revalidate strategy.
+     * 
+     * Flow:
+     * 1. Show loading (or cached data if available)
+     * 2. If cache exists, show it immediately
+     * 3. Fetch fresh data from network in background
+     * 4. Update UI when fresh data arrives
      */
     fun searchFruit() {
-        viewModelScope.launch {
+        // Cancel any ongoing search
+        searchJob?.cancel()
+        
+        searchJob = viewModelScope.launch {
             _fruitUiState.value = FruitUiState.Loading
             _dataSource.value = null
+            _isRevalidating.value = false
 
-            when (val result = repository.getFruit(_fruitQuery.value)) {
-                is CacheResult.Success -> {
-                    _fruitUiState.value = FruitUiState.Success(result.data)
-                    _dataSource.value = result.source
-                }
-                is CacheResult.Error -> {
-                    _fruitUiState.value = FruitUiState.Error(
-                        "HTTP ${result.code} - ${result.message}"
-                    )
-                }
-                is CacheResult.NetworkError -> {
-                    _fruitUiState.value = FruitUiState.Error(
-                        result.exception.localizedMessage ?: "Network error"
-                    )
+            // Collect all emissions from the Flow (cached then network)
+            repository.getFruitFlow(_fruitQuery.value).collect { result ->
+                when (result) {
+                    is FruitResult.Success -> {
+                        _fruitUiState.value = FruitUiState.Success(result.data)
+                        _dataSource.value = result.source
+                        _isRevalidating.value = result.isRevalidating
+                    }
+                    is FruitResult.Error -> {
+                        _fruitUiState.value = FruitUiState.Error(
+                            "HTTP ${result.code} - ${result.message}"
+                        )
+                        _isRevalidating.value = false
+                    }
+                    is FruitResult.NetworkError -> {
+                        _fruitUiState.value = FruitUiState.Error(
+                            result.exception.localizedMessage ?: "Network error"
+                        )
+                        _isRevalidating.value = false
+                    }
                 }
             }
         }
@@ -130,8 +153,10 @@ class NutriCoachViewModel @Inject constructor(
      * Resets the fruit search state
      */
     fun resetState() {
+        searchJob?.cancel()
         _fruitUiState.value = FruitUiState.Initial
         _dataSource.value = null
+        _isRevalidating.value = false
     }
 
     /**
