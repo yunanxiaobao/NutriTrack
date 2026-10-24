@@ -78,9 +78,11 @@ class AuthRepository @Inject constructor(
         } catch (e: Exception) {
             // Roll back the Auth account so the email is not left half-registered.
             runCatching { user.delete().await() }
-            val cause = generateSequence(e) { it.cause }
-                .firstOrNull { it is UsernameTakenException } ?: e
-            return Result.failure(cause)
+            var cause: Throwable = e
+            while (cause !is UsernameTakenException && cause.cause != null && cause.cause !== cause) {
+                cause = cause.cause!!
+            }
+            return Result.failure(if (cause is UsernameTakenException) cause else e)
         }
 
         runCatching {
