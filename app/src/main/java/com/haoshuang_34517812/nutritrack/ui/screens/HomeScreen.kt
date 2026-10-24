@@ -51,6 +51,7 @@ fun HomeScreen(
     // Collect LiveData states
     val totalScore by viewModel.totalScore.observeAsState(0)
     val username by viewModel.username.observeAsState("")
+    val hasScores by viewModel.hasScores.observeAsState(true)
 
     // Check current screen orientation
     val configuration = LocalConfiguration.current
@@ -81,6 +82,7 @@ fun HomeScreen(
                 innerPadding = innerPadding,
                 username = username,
                 totalScore = totalScore,
+                hasScores = hasScores,
                 navController = navController
             )
         } else {
@@ -88,6 +90,7 @@ fun HomeScreen(
                 innerPadding = innerPadding,
                 username = username,
                 totalScore = totalScore,
+                hasScores = hasScores,
                 navController = navController
             )
         }
@@ -102,6 +105,7 @@ private fun PortraitHomeLayout(
     innerPadding: PaddingValues,
     username: String,
     totalScore: Int,
+    hasScores: Boolean,
     navController: NavController
 ) {
     val scrollState = rememberScrollState()
@@ -122,7 +126,11 @@ private fun PortraitHomeLayout(
         FoodQualityImageSection(isLandscape = false)
         Spacer(modifier = Modifier.height(16.dp))
 
-        ScoreSection(score = totalScore, navController = navController)
+        if (hasScores) {
+            ScoreSection(score = totalScore, navController = navController)
+        } else {
+            NoScoresGuidanceCard()
+        }
 
         HorizontalDivider(
             modifier = Modifier
@@ -144,6 +152,7 @@ private fun LandscapeHomeLayout(
     innerPadding: PaddingValues,
     username: String,
     totalScore: Int,
+    hasScores: Boolean,
     navController: NavController
 ) {
     Row(
@@ -169,7 +178,11 @@ private fun LandscapeHomeLayout(
             FoodQualityImageSection(isLandscape = true)
             Spacer(modifier = Modifier.height(16.dp))
 
-            ScoreSection(score = totalScore, navController = navController, isLandscape = true)
+            if (hasScores) {
+                ScoreSection(score = totalScore, navController = navController, isLandscape = true)
+            } else {
+                NoScoresGuidanceCard()
+            }
         }
 
         // Right side: Score explanation card
@@ -418,5 +431,33 @@ private fun QuickTips() {
             fontSize = 14.sp,
             fontFamily = FontFamily(Font(R.font.poppins))
         )
+    }
+}
+/**
+ * Shown to Firebase accounts that do not have HEIFA scores yet, instead of a
+ * misleading zero score. Scores will be computed from the user's own logged
+ * data in a later release; until then the app is honest about the gap.
+ */
+@Composable
+private fun NoScoresGuidanceCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Your personal scores are on the way",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "NutriTrack now works with your own account and data. " +
+                    "Personal nutrition scores will appear here as meal logging rolls out. " +
+                    "Meanwhile, explore the fruit guide and ask NutriCoach for advice " +
+                    "tailored to your questionnaire answers.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }

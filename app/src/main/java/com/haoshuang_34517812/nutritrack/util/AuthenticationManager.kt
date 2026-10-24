@@ -32,6 +32,10 @@ object AuthenticationManager {
     fun getCurrentUserId(): String? =
         currentUserId ?: FirebaseAuth.getInstance().currentUser?.uid
 
+    /** Display name of the signed-in Firebase user, if any. */
+    fun getCurrentDisplayName(): String? =
+        FirebaseAuth.getInstance().currentUser?.displayName
+
     fun logout(context: Context) {
         FirebaseAuth.getInstance().signOut()
         currentUserId = null

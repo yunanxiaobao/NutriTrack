@@ -6,7 +6,10 @@ import kotlinx.coroutines.flow.Flow
 import java.util.Date
 import javax.inject.Inject
 
-class NutriCoachTipRepository @Inject constructor(private val tipDao: NutriCoachTipDao) {
+class NutriCoachTipRepository @Inject constructor(
+    private val tipDao: NutriCoachTipDao,
+    private val cloudSync: CloudSyncRepository
+) {
     /**
      * Saves a new nutrition tip for a specific user
      * @param userId ID of the user receiving the tip
@@ -27,8 +30,12 @@ class NutriCoachTipRepository @Inject constructor(private val tipDao: NutriCoach
             prompt = prompt
         )
 
-        // Save to database and return ID
-        return tipDao.insertTip(newTip)
+        // Save to database, mirror to Firestore, and return the row ID
+        val rowId = tipDao.insertTip(newTip)
+        if (rowId > 0) {
+            cloudSync.pushTip(newTip.copy(id = rowId))
+        }
+        return rowId
     }
 
     /**
