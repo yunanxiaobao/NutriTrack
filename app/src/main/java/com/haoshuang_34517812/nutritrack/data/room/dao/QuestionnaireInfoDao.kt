@@ -15,6 +15,9 @@ interface QuestionnaireInfoDao {
     @Query("SELECT * FROM food_intake WHERE patientId = :userId")
     suspend fun getInfoByUser(userId: String): QuestionnaireInfoEntity?
 
+    @Query("DELETE FROM food_intake WHERE patientId = :userId")
+    suspend fun deleteInfoByUser(userId: String)
+
     @Query("SELECT * FROM food_intake WHERE patientId = :userId LIMIT 1")
     fun getInfoByUserFlow(userId: String): Flow<QuestionnaireInfoEntity?>
 }

@@ -11,6 +11,11 @@ import com.haoshuang_34517812.nutritrack.util.AuthenticationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.haoshuang_34517812.nutritrack.data.repository.AuthRepository
+import com.haoshuang_34517812.nutritrack.data.repository.NutriCoachTipRepository
+import com.haoshuang_34517812.nutritrack.data.repository.QuestionnaireInfoRepository
 import javax.inject.Inject
 
 /**
@@ -19,7 +24,10 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: PatientRepository
+    private val repository: PatientRepository,
+    private val authRepository: AuthRepository,
+    private val questionnaireRepository: QuestionnaireInfoRepository,
+    private val tipRepository: NutriCoachTipRepository
 ) : ViewModel() {
 
     // UI state management
@@ -118,10 +126,16 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
-     * Deletes user account (clears credentials but keeps records)
+     * Permanently deletes the signed-in Firebase account: cloud data,
+     * username handle and the Auth user, after password re-authentication.
+     * Local per-user data (questionnaire, tips) is removed as well.
      */
-    fun deleteAccount() {
+    fun deleteAccount(currentPassword: String) {
         if (isOperationInProgress) {
+            return
+        }
+        if (currentPassword.isBlank()) {
+            _uiState.value = SettingsUiState.Error("Please enter your password to confirm deletion")
             return
         }
 
@@ -131,27 +145,24 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = SettingsUiState.Loading
 
                 val userId = _userId.value
-                if (userId.isNullOrEmpty()) {
-                    _uiState.value = SettingsUiState.Error("User ID not available")
-                    return@launch
-                }
-
-                val patient = repository.getPatientById(userId)
-
-                if (patient != null) {
-                    // Clear credentials but keep user records and scores
-                    val updatedPatient = patient.copy(
-                        passwordHash = "",
-                        name = "",
-                        phoneNumber = ""
-                    )
-                    repository.insertPatient(updatedPatient)
-                    _uiState.value = SettingsUiState.AccountDeleted
-                } else {
-                    _uiState.value = SettingsUiState.Error("User not found")
-                }
-            } catch (e: Exception) {
-                _uiState.value = SettingsUiState.Error("Failed to delete account: ${e.message}")
+                authRepository.deleteAccount(currentPassword)
+                    .onSuccess {
+                        if (!userId.isNullOrEmpty()) {
+                            runCatching { tipRepository.deleteTipsForUser(userId) }
+                            runCatching { questionnaireRepository.deleteInfoForUser(userId) }
+                        }
+                        _uiState.value = SettingsUiState.AccountDeleted
+                    }
+                    .onFailure { e ->
+                        val message = when (e) {
+                            is FirebaseAuthInvalidCredentialsException ->
+                                "Incorrect password - account not deleted"
+                            is FirebaseNetworkException ->
+                                "Network error - check your connection and try again"
+                            else -> e.localizedMessage ?: "Failed to delete account"
+                        }
+                        _uiState.value = SettingsUiState.Error(message)
+                    }
             } finally {
                 isOperationInProgress = false
             }

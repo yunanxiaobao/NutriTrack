@@ -1,5 +1,6 @@
 package com.haoshuang_34517812.nutritrack.data.repository
 
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -107,6 +108,47 @@ class AuthRepository @Inject constructor(
 
     fun logout() {
         auth.signOut()
+    }
+
+    /**
+     * Permanently deletes the signed-in account (Play account-deletion
+     * requirement): re-authenticates with [currentPassword], deletes the
+     * Firestore data (tips, questionnaire, profile), releases the username
+     * handle, and finally deletes the Firebase Auth user itself.
+     */
+    suspend fun deleteAccount(currentPassword: String): Result<Unit> {
+        val user = auth.currentUser
+            ?: return Result.failure(IllegalStateException("No signed-in user"))
+        val email = user.email
+            ?: return Result.failure(IllegalStateException("Account has no email"))
+        return try {
+            user.reauthenticate(EmailAuthProvider.getCredential(email, currentPassword)).await()
+            val uid = user.uid
+            val userDoc = firestore.collection("users").document(uid)
+            val profile = runCatching { userDoc.get().await() }.getOrNull()
+            val username = profile?.getString("username")
+
+            // Firestore does not cascade deletes: clear subcollections first,
+            // in batches under the 500-write limit.
+            val tips = userDoc.collection("tips").get().await()
+            for (chunk in tips.documents.chunked(400)) {
+                val batch = firestore.batch()
+                chunk.forEach { batch.delete(it.reference) }
+                batch.commit().await()
+            }
+            val cleanup = firestore.batch()
+            cleanup.delete(userDoc.collection("questionnaire").document("current"))
+            cleanup.delete(userDoc)
+            if (!username.isNullOrBlank()) {
+                cleanup.delete(firestore.collection("usernames").document(username.lowercase()))
+            }
+            cleanup.commit().await()
+
+            user.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun sendPasswordReset(email: String): Result<Unit> {
