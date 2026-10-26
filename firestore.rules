@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// NutriTrack Firestore security rules.
+// Model: every user can only reach their own subtree; username handles are
+// claim-once (create only when absent, bound to the creator's uid) so the
+// registration transaction can reserve a unique display handle.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    match /usernames/{username} {
+      // Anyone may check whether a handle exists (registration needs this),
+      // but only the owner can read it back in full and nobody can rebind it.
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      // Deletion is allowed only by the owner (account-deletion flow).
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+  }
+}

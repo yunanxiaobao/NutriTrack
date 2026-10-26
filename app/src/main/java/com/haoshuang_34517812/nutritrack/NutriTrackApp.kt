@@ -5,6 +5,7 @@ import android.content.Context
 import com.haoshuang_34517812.nutritrack.data.repository.PatientRepository
 import com.haoshuang_34517812.nutritrack.util.AuthenticationManager
 import com.haoshuang_34517812.nutritrack.util.Constants
+import com.haoshuang_34517812.nutritrack.util.DemoDataConfig
 import com.haoshuang_34517812.nutritrack.util.CsvInitializer
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -42,6 +43,9 @@ class NutriTrackApp : Application() {
     }
 
     private fun initializeDataIfNeeded() {
+        // Consumer builds never seed the course dataset: accounts are real
+        // Firebase accounts now. Demo seeding is debug-only, see DemoDataConfig.
+        if (!BuildConfig.DEBUG || !DemoDataConfig.isEnabled) return
         if (!isDataInitialized(applicationContext)) {
 
             CsvInitializer.init(

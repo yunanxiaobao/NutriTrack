@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -75,8 +76,32 @@ fun InsightsScreen(
             )
         }
     ) { innerPadding ->
-        // Render different layouts based on orientation
-        if (isLandscape) {
+        if (patient == null) {
+            // Firebase accounts have no HEIFA scores yet - show an honest
+            // guidance state instead of a zero-score dashboard.
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "No insights yet",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Your dietary-quality scores will appear here once meal " +
+                        "logging is available for personal accounts. Your questionnaire " +
+                        "answers already personalise NutriCoach - try asking it for a tip.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else if (isLandscape) {
             LandscapeInsightsLayout(
                 innerPadding = innerPadding,
                 patient = patient,

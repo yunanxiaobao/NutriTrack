@@ -5,13 +5,18 @@ import com.haoshuang_34517812.nutritrack.data.room.entity.QuestionnaireInfoEntit
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class QuestionnaireInfoRepository @Inject constructor(private val dao: QuestionnaireInfoDao) {
+class QuestionnaireInfoRepository @Inject constructor(
+    private val dao: QuestionnaireInfoDao,
+    private val cloudSync: CloudSyncRepository
+) {
     /**
      * Saves or replaces questionnaire information for a patient
      * @param info The questionnaire information to save
      */
     suspend fun saveInfo(info: QuestionnaireInfoEntity) {
         dao.insertInfo(info)
+        // Best-effort mirror to Firestore for signed-in users.
+        cloudSync.pushQuestionnaire(info)
     }
 
     /**
