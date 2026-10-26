@@ -26,6 +26,8 @@ import com.haoshuang_34517812.nutritrack.data.models.UserInfo
 import com.haoshuang_34517812.nutritrack.navigation.Routes
 import com.haoshuang_34517812.nutritrack.theme.MediumGreen
 import com.haoshuang_34517812.nutritrack.util.AuthenticationManager
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.haoshuang_34517812.nutritrack.viewmodel.SettingsUiState
 import com.haoshuang_34517812.nutritrack.viewmodel.SettingsViewModel
 
 /**
@@ -114,21 +116,24 @@ fun AccountScreen(
         )
     }
 
-    // Delete account dialog
+    // Navigate away only once the account is actually deleted
+    LaunchedEffect(uiState) {
+        if (uiState is SettingsUiState.AccountDeleted) {
+            showDeleteDialog = false
+            navController.navigate(Routes.LOGIN) {
+                launchSingleTop = true
+                popUpTo(Routes.ACCOUNT) { inclusive = true }
+            }
+        }
+    }
+
+    // Delete account dialog (Firebase deletion needs password re-authentication)
     if (showDeleteDialog) {
-        ConfirmDialog(
-            title = "Delete Account?",
-            text = stringResource(R.string.accountScreen_deleteAccountMsg),
-            onConfirm = {
-                viewModel.deleteAccount()
-                showDeleteDialog = false
-                navController.navigate(Routes.LOGIN) {
-                    launchSingleTop = true
-                }
-            },
-            onDismiss = { showDeleteDialog = false },
-            confirmButtonText = "Delete",
-            confirmButtonColor = MaterialTheme.colorScheme.error
+        DeleteAccountDialog(
+            errorMessage = (uiState as? SettingsUiState.Error)?.message,
+            isDeleting = uiState is SettingsUiState.Loading,
+            onConfirm = { password -> viewModel.deleteAccount(password) },
+            onDismiss = { showDeleteDialog = false }
         )
     }
 
@@ -331,6 +336,61 @@ fun ConfirmDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(dismissButtonText)
+            }
+        }
+    )
+}
+/**
+ * Password-confirmation dialog for permanent account deletion.
+ */
+@Composable
+private fun DeleteAccountDialog(
+    errorMessage: String?,
+    isDeleting: Boolean,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var password by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Account?") },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.accountScreen_deleteAccountMsg) +
+                        " This permanently deletes your cloud data as well. Enter your password to confirm."
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    enabled = !isDeleting,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(password) },
+                enabled = password.isNotBlank() && !isDeleting
+            ) {
+                Text(if (isDeleting) "Deleting..." else "Delete", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isDeleting) {
+                Text("Cancel")
             }
         }
     )

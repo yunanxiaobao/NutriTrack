@@ -19,6 +19,11 @@ class QuestionnaireInfoRepository @Inject constructor(
         cloudSync.pushQuestionnaire(info)
     }
 
+    /** Deletes the locally stored questionnaire answers for a user. */
+    suspend fun deleteInfoForUser(userId: String) {
+        dao.deleteInfoByUser(userId)
+    }
+
     /**
      * Gets questionnaire information for a specific user
      * @param userId The user ID
