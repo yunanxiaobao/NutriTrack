@@ -8,6 +8,7 @@ plugins {
 
     id("com.google.devtools.ksp")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.gms.google-services")
 
 }
 
@@ -22,7 +23,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.haoshuang_34517812.nutritrack"
+        applicationId = "com.songshawn.nutritrack"
         minSdk = 31
         targetSdk = 36
         versionCode = 1
@@ -100,6 +101,9 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore)
     implementation(libs.generativeai) // Google Gemini API
     implementation(libs.androidx.security.crypto)
 
