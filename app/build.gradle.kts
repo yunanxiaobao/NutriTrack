@@ -11,23 +11,25 @@ plugins {
 
 }
 
-val file = rootProject.file("local.properties")
+val localPropertiesFile = rootProject.file("local.properties")
 val properties = Properties()
-properties.load(file.inputStream())
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { properties.load(it) }
+}
 
 android {
     namespace = "com.haoshuang_34517812.nutritrack"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.haoshuang_34517812.nutritrack"
         minSdk = 31
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "apiKeySafe", properties.getProperty("apikey"))
+        buildConfigField("String", "apiKeySafe", properties.getProperty("apikey") ?: "\"\"")
     }
 
     buildTypes {
@@ -82,7 +84,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    val room_version = "2.7.1"
+    val room_version = "2.8.3"
     implementation("androidx.room:room-runtime:$room_version")
     // If this project uses any Kotlin source, use Kotlin Symbol Processing (KSP)
     // See Add the KSP plugin to your project
