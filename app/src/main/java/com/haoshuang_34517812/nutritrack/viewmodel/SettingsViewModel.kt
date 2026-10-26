@@ -10,6 +10,7 @@ import com.haoshuang_34517812.nutritrack.data.repository.PatientRepository
 import com.haoshuang_34517812.nutritrack.util.AuthenticationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import com.google.firebase.auth.FirebaseAuth
 import javax.inject.Inject
 
 /**
@@ -72,7 +73,20 @@ class SettingsViewModel @Inject constructor(
                     )
                     _uiState.value = SettingsUiState.Success
                 } else {
-                    _uiState.value = SettingsUiState.Error("User not found")
+                    // Firebase accounts have no legacy patient row; fall back
+                    // to the Firebase profile until cloud profile sync lands.
+                    val firebaseUser = FirebaseAuth.getInstance().currentUser
+                    if (firebaseUser != null) {
+                        _userInfo.value = UserInfo(
+                            name = firebaseUser.displayName ?: "NutriTrack user",
+                            phoneNumber = "",
+                            userId = firebaseUser.uid,
+                            sex = ""
+                        )
+                        _uiState.value = SettingsUiState.Success
+                    } else {
+                        _uiState.value = SettingsUiState.Error("User not found")
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.value = SettingsUiState.Error("Failed to load user info: ${e.message}")

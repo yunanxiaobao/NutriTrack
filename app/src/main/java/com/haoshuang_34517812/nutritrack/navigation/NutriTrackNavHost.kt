@@ -27,7 +27,19 @@ fun NutriTrackNavHost() {
         composable(Routes.WELCOME) {
             WelcomeScreen(
                 onContinue = {
-                    navController.navigate(Routes.LOGIN)
+                    // Returning users with a live Firebase session skip login.
+                    val userId = AuthenticationManager.getCurrentUserId()
+                    when {
+                        userId == null -> navController.navigate(Routes.LOGIN)
+                        AuthenticationManager.hasCompletedQuestionnaire(userId) ->
+                            navController.navigate(Routes.HOME_GRAPH) {
+                                popUpTo(Routes.WELCOME) { inclusive = true }
+                            }
+                        else ->
+                            navController.navigate(Routes.QUESTIONNAIRE) {
+                                popUpTo(Routes.WELCOME) { inclusive = true }
+                            }
+                    }
                 }
             )
         }
@@ -59,11 +71,18 @@ fun NutriTrackNavHost() {
 
         composable(Routes.REGISTER) {
             RegisterScreen(
-                onRegisterSuccess = {
-                    navController.navigate(Routes.LOGIN) {
-                        // Ensure only one login page in back stack
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                        launchSingleTop = true
+                onRegisterSuccess = { userId ->
+                    // Registration signs in immediately; new users onboard first.
+                    if (AuthenticationManager.hasCompletedQuestionnaire(userId)) {
+                        navController.navigate(Routes.HOME_GRAPH) {
+                            launchSingleTop = true
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Routes.QUESTIONNAIRE) {
+                            launchSingleTop = true
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     }
                 },
                 onGoLogin = {
