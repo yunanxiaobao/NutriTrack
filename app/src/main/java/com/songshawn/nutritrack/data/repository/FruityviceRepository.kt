@@ -5,6 +5,7 @@ import com.songshawn.nutritrack.data.network.FruityviceApi
 import com.songshawn.nutritrack.data.network.fruityvice.FruitDto
 import com.songshawn.nutritrack.data.room.dao.FruitCacheDao
 import com.songshawn.nutritrack.data.room.entity.FruitCacheEntity
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -63,7 +64,7 @@ class FruityviceRepository @Inject constructor(
         // Step 2: Always fetch from network to revalidate (unless cache is fresh)
         val shouldRevalidate = cachedFruit == null || cachedFruit.isExpired()
         
-        if (shouldRevalidate || cachedFruit == null) {
+        if (shouldRevalidate) {
             try {
                 Log.d(TAG, "Fetching fresh data for: $normalizedName")
                 val response = apiService.getFruitByName(name)
@@ -99,6 +100,8 @@ class FruityviceRepository @Inject constructor(
                         ))
                     }
                 }
+            } catch (ce: CancellationException) {
+                throw ce
             } catch (e: Exception) {
                 Log.e(TAG, "Network error for: $normalizedName", e)
                 
@@ -166,6 +169,8 @@ class FruityviceRepository @Inject constructor(
                 }
                 return@withContext FruitResult.Error(response.code(), response.message() ?: "Unknown error")
             }
+        } catch (ce: CancellationException) {
+            throw ce
         } catch (e: Exception) {
             if (cachedFruit != null) {
                 return@withContext FruitResult.Success(

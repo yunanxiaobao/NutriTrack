@@ -29,7 +29,7 @@ import javax.inject.Inject
 
 /**
  * ViewModel for managing GenAI interactions and storing nutrition tips.
- * Handles communication with Gemini API and local tip storage.
+ * Handles communication with the LLM API and local tip storage.
  */
 @HiltViewModel
 class GenAIViewModel @Inject constructor(
@@ -361,7 +361,7 @@ class GenAIViewModel @Inject constructor(
             _ui.value = GenAiUiState.Loading("Generating Tip...")
             _state.value = ApiResult.Loading
             
-            val r = repo.askGemini((prompt))
+            val r = repo.generateText(prompt)
             _state.value = r
             
             when (r) {
@@ -389,7 +389,7 @@ class GenAIViewModel @Inject constructor(
             _ui.value = GenAiUiState.Streaming("", isComplete = false)
             _state.value = ApiResult.Loading
 
-            repo.askGeminiStream(prompt).collect { result ->
+            repo.streamText(prompt).collect { result ->
                 when (result) {
                     is StreamResult.Chunk -> {
                         // Append new chunk to accumulated text

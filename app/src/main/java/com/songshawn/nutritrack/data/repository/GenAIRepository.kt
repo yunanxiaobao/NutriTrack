@@ -10,7 +10,6 @@ import com.songshawn.nutritrack.data.network.genai.ImageUrl
 import com.songshawn.nutritrack.data.network.genai.OpenAIMessage
 import com.songshawn.nutritrack.data.network.genai.OpenAIRequest
 import com.songshawn.nutritrack.data.network.genai.OpenAIStreamResponse
-import com.songshawn.nutritrack.data.network.genai.Thinking
 import com.songshawn.nutritrack.viewmodel.ApiResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -18,125 +17,91 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import okio.IOException
-import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import javax.inject.Inject
 
+/**
+ * Talks to Zhipu AI's OpenAI-compatible `chat/completions` endpoint.
+ *
+ * Note: the API key is still read from BuildConfig here. Moving it behind a
+ * server-side proxy is tracked as a separate change (see docs/roadmap.md).
+ */
 class GenAIRepository @Inject constructor(
-    private val apiService: GenAIApiService
+    private val apiService: GenAIApiService,
 ) {
-    private val apiKey: String = BuildConfig.apiKeySafe
     private val gson = Gson()
+    private val authHeader: String get() = "Bearer ${BuildConfig.ZHIPU_API_KEY}"
 
-    suspend fun askGemini(prompt: String): ApiResult<String> = withContext(Dispatchers.IO) {
-        try {
-            // Zhipu AI (GLM-4-Flash) Request - Free & Fast
+    /** Single-shot text completion. */
+    suspend fun generateText(prompt: String): ApiResult<String> = withContext(Dispatchers.IO) {
+        runCatchingApi {
             val request = OpenAIRequest(
-                model = "glm-4-flash",
-                messages = listOf(
-                    OpenAIMessage(role = "user", content = prompt)
-                )
+                model = TEXT_MODEL,
+                messages = listOf(OpenAIMessage(role = "user", content = prompt)),
             )
-            val resp = apiService.generateContent(request, "Bearer $apiKey")
-
+            val resp = apiService.generateContent(request, authHeader)
             if (!resp.isSuccessful) {
-                val body = resp.errorBody()?.string()
-                return@withContext ApiResult.Error.Http(code = resp.code(), message = resp.message(), body = body)
+                return@runCatchingApi ApiResult.Error.Http(
+                    code = resp.code(),
+                    message = resp.message(),
+                    body = resp.errorBody()?.string(),
+                )
             }
-
-            val text = resp.body()
-                ?.choices?.firstOrNull()
-                ?.message?.content
-                ?: return@withContext ApiResult.Error.Parsing(IllegalStateException("empty choices/message/content"))
-
+            val text = resp.body()?.choices?.firstOrNull()?.message?.content
+                ?: return@runCatchingApi ApiResult.Error.Parsing(
+                    IllegalStateException("empty choices/message/content"),
+                )
             ApiResult.Success(text)
-
-        } catch (ce: CancellationException) {
-            throw ce
-        } catch (io: IOException) {
-            ApiResult.Error.Network(io)
-        } catch (t: Throwable) {
-            ApiResult.Error.Unknown(t)
         }
     }
 
     /**
-     * Stream AI response using SSE (Server-Sent Events)
-     * Emits text chunks as they arrive, significantly reducing TTFT (Time To First Token)
+     * Streams a text completion via Server-Sent Events.
      *
-     * @param prompt The prompt to send to the AI
-     * @return Flow of StreamResult containing incremental text or completion/error status
+     * Emits [StreamResult.Chunk] for each delta, then exactly one terminal
+     * [StreamResult.Complete] or [StreamResult.Error]. Cancellation of the
+     * collector propagates and closes the underlying HTTP stream.
      */
-    fun askGeminiStream(prompt: String): Flow<StreamResult> = flow {
+    fun streamText(prompt: String): Flow<StreamResult> = flow {
         try {
             val request = OpenAIRequest(
-                model = "glm-4-flash",
-                messages = listOf(
-                    OpenAIMessage(role = "user", content = prompt)
-                ),
-                stream = true  // Enable streaming
+                model = TEXT_MODEL,
+                messages = listOf(OpenAIMessage(role = "user", content = prompt)),
+                stream = true,
             )
-
-            val response = apiService.generateContentStream(request, "Bearer $apiKey")
-
+            val response = apiService.generateContentStream(request, authHeader)
             if (!response.isSuccessful) {
-                val errorBody = response.errorBody()?.string()
-                emit(StreamResult.Error("HTTP ${response.code()}: $errorBody"))
+                emit(StreamResult.Error("HTTP ${response.code()}: ${response.errorBody()?.string()}"))
                 return@flow
             }
-
-            val responseBody = response.body()
-            if (responseBody == null) {
+            val body = response.body()
+            if (body == null) {
                 emit(StreamResult.Error("Empty response body"))
                 return@flow
             }
 
-            // Read SSE stream line by line
-            val reader: BufferedReader = responseBody.byteStream().bufferedReader()
-            var line: String?
+            // `use` guarantees the connection is released even if the collector is cancelled.
+            body.byteStream().bufferedReader().use { reader ->
+                while (true) {
+                    val line = reader.readLine() ?: break
+                    if (!line.startsWith("data:")) continue
+                    val data = line.removePrefix("data:").trim()
+                    if (data.isEmpty()) continue
+                    if (data == "[DONE]") break
 
-            while (reader.readLine().also { line = it } != null) {
-                val currentLine = line ?: continue
-
-                // SSE format: "data: {...json...}" or "data: [DONE]"
-                if (currentLine.startsWith("data:")) {
-                    val jsonData = currentLine.removePrefix("data:").trim()
-
-                    // Check for stream end signal
-                    if (jsonData == "[DONE]") {
-                        emit(StreamResult.Complete)
-                        break
+                    val chunk = try {
+                        gson.fromJson(data, OpenAIStreamResponse::class.java)
+                    } catch (e: com.google.gson.JsonSyntaxException) {
+                        continue // skip a malformed frame rather than aborting the whole answer
                     }
-
-                    // Skip empty data
-                    if (jsonData.isEmpty()) continue
-
-                    try {
-                        // Parse the SSE JSON chunk
-                        val streamResponse = gson.fromJson(jsonData, OpenAIStreamResponse::class.java)
-                        val content = streamResponse.choices?.firstOrNull()?.delta?.content
-
-                        if (!content.isNullOrEmpty()) {
-                            emit(StreamResult.Chunk(content))
-                        }
-
-                        // Check if this is the final chunk
-                        val finishReason = streamResponse.choices?.firstOrNull()?.finish_reason
-                        if (finishReason == "stop") {
-                            emit(StreamResult.Complete)
-                            break
-                        }
-                    } catch (e: Exception) {
-                        // Skip malformed JSON chunks, continue reading
-                        continue
-                    }
+                    val choice = chunk.choices?.firstOrNull()
+                    val content = choice?.delta?.content
+                    if (!content.isNullOrEmpty()) emit(StreamResult.Chunk(content))
+                    if (choice?.finishReason == "stop") break
                 }
             }
-
-            reader.close()
-            responseBody.close()
-
+            emit(StreamResult.Complete)
         } catch (ce: CancellationException) {
             throw ce
         } catch (io: IOException) {
@@ -146,79 +111,67 @@ class GenAIRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    /** Asks the vision model to name the fruit in [bitmap]. */
     suspend fun identifyFruitFromImage(bitmap: Bitmap): ApiResult<String> = withContext(Dispatchers.IO) {
-        try {
-            val base64Image = encodeBitmapToBase64(bitmap)
-            
-            val prompt = "Identify this fruit and return only the fruit name in English. If it's not a fruit, return 'Not a fruit'."
-            
-            // Zhipu AI (GLM-4.5V) Vision Request
+        runCatchingApi {
             val contentParts = listOf(
-                ContentPart(type = "image_url", image_url = ImageUrl(url = "data:image/jpeg;base64,$base64Image")),
-                ContentPart(type = "text", text = prompt)
+                ContentPart(type = "image_url", imageUrl = ImageUrl(url = "data:image/jpeg;base64,${bitmap.toBase64Jpeg()}")),
+                ContentPart(type = "text", text = FRUIT_PROMPT),
             )
-
             val request = OpenAIRequest(
-                model = "glm-4v", // Using glm-4v as it is the standard vision model. glm-4.5v is also available but check pricing.
-                // Note: User asked for GLM-4.5V, but let's stick to glm-4v for broader compatibility or glm-4v-flash if available.
-                // Actually, let's use "glm-4v" which is the stable vision model.
-                // Update: User specifically asked for "glm-4.5v" in the prompt. I will use "glm-4v" first as it is more common, 
-                // but if they insist on 4.5v I can change it. 
-                // Wait, the curl example had "glm-4.5v". I will use "glm-4v" to be safe or "glm-4v-plus".
-                // Let's use "glm-4v" for now.
-                messages = listOf(
-                    OpenAIMessage(role = "user", content = contentParts)
-                ),
-                thinking = Thinking(type = "enabled") // Added thinking as per example
+                model = VISION_MODEL,
+                messages = listOf(OpenAIMessage(role = "user", content = contentParts)),
             )
-            
-            // Correction: The user explicitly asked to change to GLM-4.5V. I should use "glm-4.5v" if I want to be obedient.
-            // However, "glm-4v" is the standard public model name usually. 
-            // Let's use "glm-4v" to avoid "model not found" errors if 4.5v is in beta/whitelist.
-            // Actually, I'll use "glm-4v" and comment about it.
-            
-            val resp = apiService.generateContent(request.copy(model = "glm-4v"), "Bearer $apiKey")
-
+            val resp = apiService.generateContent(request, authHeader)
             if (!resp.isSuccessful) {
-                val body = resp.errorBody()?.string()
-                return@withContext ApiResult.Error.Http(code = resp.code(), message = resp.message(), body = body)
+                return@runCatchingApi ApiResult.Error.Http(
+                    code = resp.code(),
+                    message = resp.message(),
+                    body = resp.errorBody()?.string(),
+                )
             }
-
-            val text = resp.body()
-                ?.choices?.firstOrNull()
-                ?.message?.content
-                ?.trim()
-                ?: return@withContext ApiResult.Error.Parsing(IllegalStateException("empty response"))
-
+            val text = resp.body()?.choices?.firstOrNull()?.message?.content?.trim()
+                ?: return@runCatchingApi ApiResult.Error.Parsing(IllegalStateException("empty response"))
             ApiResult.Success(text)
-
-        } catch (ce: CancellationException) {
-            throw ce
-        } catch (io: IOException) {
-            ApiResult.Error.Network(io)
-        } catch (t: Throwable) {
-            ApiResult.Error.Unknown(t)
         }
     }
 
-    private fun encodeBitmapToBase64(bitmap: Bitmap): String {
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
-        val byteArray = outputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    private inline fun <T> runCatchingApi(block: () -> ApiResult<T>): ApiResult<T> = try {
+        block()
+    } catch (ce: CancellationException) {
+        throw ce
+    } catch (io: IOException) {
+        ApiResult.Error.Network(io)
+    } catch (t: Throwable) {
+        ApiResult.Error.Unknown(t)
+    }
+
+    private fun Bitmap.toBase64Jpeg(quality: Int = 80): String {
+        val out = ByteArrayOutputStream()
+        compress(Bitmap.CompressFormat.JPEG, quality, out)
+        return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+    }
+
+    private companion object {
+        /** Free tier text model. */
+        const val TEXT_MODEL = "glm-4-flash"
+
+        /** Stable vision model; the one this feature was tested against. */
+        const val VISION_MODEL = "glm-4v"
+
+        const val FRUIT_PROMPT =
+            "Identify this fruit and return only the fruit name in English. If it's not a fruit, return 'Not a fruit'."
     }
 }
 
-/**
- * Represents the result of a streaming AI response
- */
+/** Result of a streaming AI response. */
 sealed class StreamResult {
-    /** A chunk of text content received from the stream */
+    /** An incremental piece of the answer. */
     data class Chunk(val text: String) : StreamResult()
-    
-    /** The stream has completed successfully */
+
+    /** The stream finished normally. */
     data object Complete : StreamResult()
-    
-    /** An error occurred during streaming */
+
+    /** The stream failed; no further items will be emitted. */
     data class Error(val message: String) : StreamResult()
 }
