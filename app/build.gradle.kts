@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.detekt)
 }
 
 val localProperties = Properties().apply {
@@ -59,6 +60,19 @@ android {
         compose = true
         buildConfig = true
     }
+    lint {
+        // Existing issues are recorded in the baseline; CI fails on anything new.
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+        checkDependencies = false
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$projectDir/detekt-baseline.xml")
 }
 
 kotlin {

@@ -1,0 +1,154 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:GenAIRepository.kt$GenAIRepository$fun streamText(prompt: String): Flow&lt;StreamResult&gt;</ID>
+    <ID>ImplicitDefaultLocale:ClinicianScreen.kt$String.format("%.2f", score)</ID>
+    <ID>ImplicitDefaultLocale:ClinicianScreen.kt$String.format("%.2f", user.heifaTotalScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.alcoholScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.dairyScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.discretionaryScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.fruitScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.fruitServeSize)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.fruitVariantionsScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.grainsScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.heifaTotalScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.meatAndAlternativeScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.saturatedFatScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.sodiumScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.sugarScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.unsaturatedFatScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.vegetableScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.vegetablesVariantionsScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.waterScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", patient.wholegrainsScore)</ID>
+    <ID>ImplicitDefaultLocale:GenAIViewModel.kt$GenAIViewModel$String.format("%.1f", score)</ID>
+    <ID>ImplicitDefaultLocale:InsightsScreen.kt$String.format("%.1f", value)</ID>
+    <ID>ImplicitDefaultLocale:TimingStep.kt$String.format("%02d:%02d", h, m)</ID>
+    <ID>LongMethod:AccountScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AccountScreen( navController: NavController, viewModel: SettingsViewModel = hiltViewModel(), userId: String? = AuthenticationManager.getCurrentUserId() )</ID>
+    <ID>LongMethod:ClinicianScreen.kt$@Composable fun GenderStatisticCard( title: String, count: Int, averageScore: Double, formatter: DecimalFormat, modifier: Modifier = Modifier, isLandscape: Boolean = false )</ID>
+    <ID>LongMethod:ClinicianScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ClinicianScreen( userId: String, navController: NavController, viewModel: ClinicianViewModel = hiltViewModel(), genAiViewModel: GenAIViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:GenAIComponents.kt$@Composable fun GenAIAdviceComponent( aiResult: ApiResult&lt;String&gt;, genAiViewModel: GenAIViewModel, userId: String = "", title: String = "Need a tip?", suggestedPromptsShort: List&lt;String&gt; = listOf(), suggestedPromptsFull: List&lt;String&gt; = listOf(), defaultPrompt: String = stringResource(R.string.nutriCoachScreen_defaultPrompt), showHistory: Boolean = true, onShowHistory: () -&gt; Unit = {}, useRAG: Boolean = true )</ID>
+    <ID>LongMethod:LoginScreen.kt$@Composable fun LoginScreen( viewModel: AuthViewModel = hiltViewModel(), onLoginSuccess: (String) -&gt; Unit, onGoRegister: () -&gt; Unit, )</ID>
+    <ID>LongMethod:MyDropDownMenu.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ClinicianIdDropdown( ids: List&lt;String&gt;, selectedId: String, expanded: Boolean, onExpandedChange: (Boolean) -&gt; Unit, onSelected: (String) -&gt; Unit, modifier: Modifier = Modifier, menuBackgroundColor: Color = LightGrey, menuElevation: Int = 2, disabledItems: Set&lt;String&gt; = emptySet() )</ID>
+    <ID>LongMethod:NutriCoachScreen.kt$@Composable fun FruitDetailCard( fruit: FruitDto, onClose: () -&gt; Unit, isLandscape: Boolean = false )</ID>
+    <ID>LongMethod:NutriCoachScreen.kt$@Composable fun NutriCoachScreen( userId: String, navController: NavController, viewModel: NutriCoachViewModel = hiltViewModel(), genAiViewModel: GenAIViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:NutriTrackNavHost.kt$@Composable fun NutriTrackNavHost()</ID>
+    <ID>LongMethod:PersonaStep.kt$@Composable fun PersonaSelector( selectedPersona: Persona?, onPersonaSelected: (Persona?) -&gt; Unit, isLandscape: Boolean = false )</ID>
+    <ID>LongMethod:QuestionnaireScreen.kt$@Composable fun QuestionnaireScreen( userId: String, onComplete: () -&gt; Unit, viewModel: QuestionnaireViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:RegisterScreen.kt$@Composable fun RegisterScreen( viewModel: AuthViewModel = hiltViewModel(), onRegisterSuccess: (String) -&gt; Unit, onGoLogin: () -&gt; Unit, )</ID>
+    <ID>LongMethod:TipHistoryDialog.kt$@Composable fun TipHistoryDialog( tips: List&lt;NutriCoachTipEntity&gt;, onDismiss: () -&gt; Unit, onDeleteTip: (Long) -&gt; Unit )</ID>
+    <ID>LongMethod:TipHistoryDialog.kt$@Composable fun TipHistoryItem( tip: NutriCoachTipEntity, onDeleteTip: (Long) -&gt; Unit )</ID>
+    <ID>LoopWithTooManyJumpStatements:CSVParse.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:CloudSyncRepository.kt$CloudSyncRepository$for</ID>
+    <ID>LoopWithTooManyJumpStatements:GenAIRepository.kt$GenAIRepository$while</ID>
+    <ID>MatchingDeclarationName:CSVParse.kt$CsvUtils</ID>
+    <ID>MatchingDeclarationName:GetFruitEmoji.kt$FruitEmojiMapper</ID>
+    <ID>MatchingDeclarationName:Patient.kt$PatientEntity</ID>
+    <ID>MatchingDeclarationName:QuetionnaireStep.kt$QuestionnaireStep</ID>
+    <ID>MatchingDeclarationName:SharedPrefManagement.kt$PreferencesManager</ID>
+    <ID>MaxLineLength:GenAIViewModel.kt$GenAIViewModel$appendLine("As a data analyst, please analyze the following nutritional health data for this population and identify 3 interesting data patterns or insights:")</ID>
+    <ID>MaxLineLength:GenAIViewModel.kt$GenAIViewModel$appendLine("You are a professional nutrition coach assistant. Please provide personalized advice based on the user's nutrition profile.")</ID>
+    <ID>MaxLineLength:GenAIViewModel.kt$GenAIViewModel$appendLine("• Fruits: ${String.format("%.1f", patient.fruitScore)} | Variations: ${String.format("%.1f", patient.fruitVariantionsScore)} | Serve Size: ${String.format("%.1f", patient.fruitServeSize)}")</ID>
+    <ID>MaxLineLength:GenAIViewModel.kt$GenAIViewModel$appendLine("• Vegetables: ${String.format("%.1f", patient.vegetableScore)} | Variations: ${String.format("%.1f", patient.vegetablesVariantionsScore)}")</ID>
+    <ID>MaxLineLength:Persona.kt$Persona.BALANCE_SEEKER$"I try and live a balanced lifestyle, and I think that all foods are okay in moderation. I shouldn’t have to feel guilty about eating a piece of cake now and again. I get all sorts of inspiration from social media like finding out about new restaurants, fun recipes and sometimes healthy eating tips."</ID>
+    <ID>MaxLineLength:Persona.kt$Persona.FOOD_CAREFREE$"I’m not bothered about healthy eating. I don’t really see the point and I don’t think about it. I don’t really notice healthy eating tips or recipes and I don’t care what I eat."</ID>
+    <ID>MaxLineLength:Persona.kt$Persona.HEALTH_DEVOTEE$"I’m passionate about healthy eating &amp; health plays a big part in my life. I use social media to follow active lifestyle personalities or get new recipes/exercise ideas. I may even buy superfoods or follow a particular type of diet. I like to think I am super healthy."</ID>
+    <ID>MaxLineLength:Persona.kt$Persona.HEALTH_PROCRASTINATOR$"I’m contemplating healthy eating but it’s not a priority for me right now. I know the basics about what it means to be healthy, but it doesn’t seem relevant to me right now. I have taken a few steps to be healthier but I am not motivated to make it a high priority because I have too many other things going on in my life."</ID>
+    <ID>MaxLineLength:Persona.kt$Persona.MINDFUL_EATER$"I’m health-conscious and being healthy and eating healthy is important to me. Although health means different things to different people, I make conscious lifestyle decisions about eating based on what I believe healthy means. I look for new recipes and healthy eating information on social media."</ID>
+    <ID>MaxLineLength:Persona.kt$Persona.WELLNESS_STRIVER$"I aspire to be healthy (but struggle sometimes). Healthy eating is hard work! I’ve tried to improve my diet, but always find things that make it difficult to stick with the changes. Sometimes I notice recipe ideas or healthy eating hacks, and if it seems easy enough, I’ll give it a go."</ID>
+    <ID>MayBeConst:DemoDataConfig.kt$DemoDataConfig$val isEnabled: Boolean = false</ID>
+    <ID>NestedBlockDepth:ScoreType.kt$ScoreType.Companion$fun validateRequiredColumns(columnIndices: Map&lt;String, Int&gt;): Boolean</ID>
+    <ID>NewLineAtEndOfFile:AboutScreen.kt$com.songshawn.nutritrack.ui.screens.settings.AboutScreen.kt</ID>
+    <ID>NewLineAtEndOfFile:AdminLoginScreen.kt$com.songshawn.nutritrack.ui.screens.settings.AdminLoginScreen.kt</ID>
+    <ID>NewLineAtEndOfFile:BottomNavigationBar.kt$com.songshawn.nutritrack.ui.components.BottomNavigationBar.kt</ID>
+    <ID>NewLineAtEndOfFile:CSVParse.kt$com.songshawn.nutritrack.util.CSVParse.kt</ID>
+    <ID>NewLineAtEndOfFile:ClinicianScreen.kt$com.songshawn.nutritrack.ui.screens.settings.ClinicianScreen.kt</ID>
+    <ID>NewLineAtEndOfFile:ClinicianViewModel.kt$com.songshawn.nutritrack.viewmodel.ClinicianViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:Color.kt$com.songshawn.nutritrack.theme.Color.kt</ID>
+    <ID>NewLineAtEndOfFile:Constants.kt$com.songshawn.nutritrack.util.Constants.kt</ID>
+    <ID>NewLineAtEndOfFile:CsvInitializer.kt$com.songshawn.nutritrack.util.CsvInitializer.kt</ID>
+    <ID>NewLineAtEndOfFile:ExampleUnitTest.kt$com.songshawn.nutritrack.ExampleUnitTest.kt</ID>
+    <ID>NewLineAtEndOfFile:FoodCategoryStep.kt$com.songshawn.nutritrack.ui.screens.questionnaire.FoodCategoryStep.kt</ID>
+    <ID>NewLineAtEndOfFile:FruitModel.kt$com.songshawn.nutritrack.data.network.fruityvice.FruitModel.kt</ID>
+    <ID>NewLineAtEndOfFile:FruityviceRepository.kt$com.songshawn.nutritrack.data.repository.FruityviceRepository.kt</ID>
+    <ID>NewLineAtEndOfFile:GenAIComponents.kt$com.songshawn.nutritrack.ui.components.GenAIComponents.kt</ID>
+    <ID>NewLineAtEndOfFile:GenAIViewModel.kt$com.songshawn.nutritrack.viewmodel.GenAIViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:Gender.kt$com.songshawn.nutritrack.data.models.Gender.kt</ID>
+    <ID>NewLineAtEndOfFile:GetFruitEmoji.kt$com.songshawn.nutritrack.util.GetFruitEmoji.kt</ID>
+    <ID>NewLineAtEndOfFile:HomeViewModel.kt$com.songshawn.nutritrack.viewmodel.HomeViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:InsightsScreen.kt$com.songshawn.nutritrack.ui.screens.InsightsScreen.kt</ID>
+    <ID>NewLineAtEndOfFile:InsightsScreenScoreCategory.kt$com.songshawn.nutritrack.data.models.InsightsScreenScoreCategory.kt</ID>
+    <ID>NewLineAtEndOfFile:InsightsViewModel.kt$com.songshawn.nutritrack.viewmodel.InsightsViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:MardownTextField.kt$com.songshawn.nutritrack.ui.components.MardownTextField.kt</ID>
+    <ID>NewLineAtEndOfFile:MyDropDownMenu.kt$com.songshawn.nutritrack.ui.components.MyDropDownMenu.kt</ID>
+    <ID>NewLineAtEndOfFile:MyTextField.kt$com.songshawn.nutritrack.ui.components.MyTextField.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriCoachScreen.kt$com.songshawn.nutritrack.ui.screens.NutriCoachScreen.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriCoachTipDao.kt$com.songshawn.nutritrack.data.room.dao.NutriCoachTipDao.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriCoachTipEntity.kt$com.songshawn.nutritrack.data.room.entity.NutriCoachTipEntity.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriCoachTipRepository.kt$com.songshawn.nutritrack.data.repository.NutriCoachTipRepository.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriCoachViewModel.kt$com.songshawn.nutritrack.viewmodel.NutriCoachViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriTrackApp.kt$com.songshawn.nutritrack.NutriTrackApp.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriTrackDatabase.kt$com.songshawn.nutritrack.data.room.database.NutriTrackDatabase.kt</ID>
+    <ID>NewLineAtEndOfFile:NutriTrackNavHost.kt$com.songshawn.nutritrack.navigation.NutriTrackNavHost.kt</ID>
+    <ID>NewLineAtEndOfFile:Patient.kt$com.songshawn.nutritrack.data.room.entity.Patient.kt</ID>
+    <ID>NewLineAtEndOfFile:PatientDao.kt$com.songshawn.nutritrack.data.room.dao.PatientDao.kt</ID>
+    <ID>NewLineAtEndOfFile:PatientRepository.kt$com.songshawn.nutritrack.data.repository.PatientRepository.kt</ID>
+    <ID>NewLineAtEndOfFile:Persona.kt$com.songshawn.nutritrack.data.models.Persona.kt</ID>
+    <ID>NewLineAtEndOfFile:PersonaStep.kt$com.songshawn.nutritrack.ui.screens.questionnaire.PersonaStep.kt</ID>
+    <ID>NewLineAtEndOfFile:QuestionnaireInfoDao.kt$com.songshawn.nutritrack.data.room.dao.QuestionnaireInfoDao.kt</ID>
+    <ID>NewLineAtEndOfFile:QuestionnaireInfoEntity.kt$com.songshawn.nutritrack.data.room.entity.QuestionnaireInfoEntity.kt</ID>
+    <ID>NewLineAtEndOfFile:QuestionnaireInfoRepository.kt$com.songshawn.nutritrack.data.repository.QuestionnaireInfoRepository.kt</ID>
+    <ID>NewLineAtEndOfFile:QuestionnaireScreen.kt$com.songshawn.nutritrack.ui.screens.questionnaire.QuestionnaireScreen.kt</ID>
+    <ID>NewLineAtEndOfFile:QuestionnaireViewModel.kt$com.songshawn.nutritrack.viewmodel.QuestionnaireViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:QuetionnaireStep.kt$com.songshawn.nutritrack.data.models.QuetionnaireStep.kt</ID>
+    <ID>NewLineAtEndOfFile:Routes.kt$com.songshawn.nutritrack.navigation.Routes.kt</ID>
+    <ID>NewLineAtEndOfFile:ScoreType.kt$com.songshawn.nutritrack.data.models.ScoreType.kt</ID>
+    <ID>NewLineAtEndOfFile:SettingsScreen.kt$com.songshawn.nutritrack.ui.screens.settings.SettingsScreen.kt</ID>
+    <ID>NewLineAtEndOfFile:SettingsViewModel.kt$com.songshawn.nutritrack.viewmodel.SettingsViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:SharedPrefManagement.kt$com.songshawn.nutritrack.data.store.SharedPrefManagement.kt</ID>
+    <ID>NewLineAtEndOfFile:StateManagement.kt$com.songshawn.nutritrack.viewmodel.StateManagement.kt</ID>
+    <ID>NewLineAtEndOfFile:Theme.kt$com.songshawn.nutritrack.theme.Theme.kt</ID>
+    <ID>NewLineAtEndOfFile:TimingStep.kt$com.songshawn.nutritrack.ui.screens.questionnaire.TimingStep.kt</ID>
+    <ID>NewLineAtEndOfFile:TipHistoryDialog.kt$com.songshawn.nutritrack.ui.components.TipHistoryDialog.kt</ID>
+    <ID>NewLineAtEndOfFile:Type.kt$com.songshawn.nutritrack.theme.Type.kt</ID>
+    <ID>NewLineAtEndOfFile:UserInfo.kt$com.songshawn.nutritrack.data.models.UserInfo.kt</ID>
+    <ID>NewLineAtEndOfFile:WelcomeScreen.kt$com.songshawn.nutritrack.ui.screens.WelcomeScreen.kt</ID>
+    <ID>ReturnCount:AuthViewModel.kt$AuthViewModel$fun register(username: String, email: String, password: String, confirmPassword: String)</ID>
+    <ID>SwallowedException:CSVParse.kt$e: Exception</ID>
+    <ID>SwallowedException:ClinicianViewModel.kt$ClinicianViewModel$e: Exception</ID>
+    <ID>SwallowedException:CsvInitializer.kt$CsvInitializer$e: Exception</ID>
+    <ID>SwallowedException:GenAIRepository.kt$GenAIRepository$e: com.google.gson.JsonSyntaxException</ID>
+    <ID>SwallowedException:GenAIViewModel.kt$GenAIViewModel$e: Exception</ID>
+    <ID>SwallowedException:GenAIViewModel.kt$GenAIViewModel$t: Throwable</ID>
+    <ID>SwallowedException:ScoreType.kt$ScoreType.Companion$e: Exception</ID>
+    <ID>SwallowedException:TipHistoryDialog.kt$e2: Exception</ID>
+    <ID>SwallowedException:TipHistoryDialog.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AuthRepository.kt$AuthRepository$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CSVParse.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ClinicianViewModel.kt$ClinicianViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CsvInitializer.kt$CsvInitializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FruityviceRepository.kt$FruityviceRepository$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GenAIRepository.kt$GenAIRepository$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:GenAIViewModel.kt$GenAIViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GenAIViewModel.kt$GenAIViewModel$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:QuestionnaireViewModel.kt$QuestionnaireViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ScoreType.kt$ScoreType.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TipHistoryDialog.kt$e2: Exception</ID>
+    <ID>TooGenericExceptionCaught:TipHistoryDialog.kt$e: Exception</ID>
+    <ID>TooManyFunctions:ClinicianScreen.kt$com.songshawn.nutritrack.ui.screens.settings.ClinicianScreen.kt</ID>
+    <ID>TooManyFunctions:GenAIComponents.kt$com.songshawn.nutritrack.ui.components.GenAIComponents.kt</ID>
+    <ID>TooManyFunctions:GenAIViewModel.kt$GenAIViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:InsightsScreen.kt$com.songshawn.nutritrack.ui.screens.InsightsScreen.kt</ID>
+    <ID>TooManyFunctions:NutriCoachScreen.kt$com.songshawn.nutritrack.ui.screens.NutriCoachScreen.kt</ID>
+    <ID>UnusedParameter:AboutScreen.kt$userId: String</ID>
+    <ID>UnusedParameter:AdminLoginScreen.kt$userId: String</ID>
+    <ID>UnusedParameter:AuthenticationManager.kt$AuthenticationManager$context: Context</ID>
+    <ID>UnusedParameter:InsightsScreen.kt$userId: String</ID>
+    <ID>UnusedParameter:SettingsScreen.kt$userId: String</ID>
+    <ID>UnusedParameter:SettingsScreen.kt$viewModel: SettingsViewModel = hiltViewModel()</ID>
+    <ID>UnusedPrivateMember:FoodCategoryStep.kt$@Composable private fun FoodItemGrid( category: FoodCategory, isSelected: Boolean, onToggle: () -&gt; Unit )</ID>
+    <ID>UnusedPrivateProperty:NutriCoachScreen.kt$val fruitScore by viewModel.getFruitScore(userId).collectAsState(initial = 100.0)</ID>
+  </CurrentIssues>
+</SmellBaseline>
