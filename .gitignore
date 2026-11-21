@@ -27,8 +27,15 @@ render.experimental.xml
 *.jks
 *.keystore
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+# Firebase client config (app/google-services.json) IS committed on purpose: it only
+# identifies the Firebase project and is required for CI builds. Access is enforced by
+# firestore.rules and API-key restrictions, not by keeping this file secret.
 
 # Android Profiling
 *.hprof
+
+# Editor settings
+.vscode/
+
+# Local secrets
+secrets.properties
