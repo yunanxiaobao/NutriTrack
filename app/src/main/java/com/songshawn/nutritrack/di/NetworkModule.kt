@@ -2,6 +2,7 @@ package com.songshawn.nutritrack.di
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.songshawn.nutritrack.BuildConfig
 import com.songshawn.nutritrack.data.network.FruityviceApi
 import com.songshawn.nutritrack.data.network.GenAIApiService
 import dagger.Module
@@ -20,59 +21,57 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val GEMINI_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
+    private const val ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
     private const val FRUITYVICE_BASE_URL = "https://www.fruityvice.com/"
 
     @Provides
     @Singleton
-    fun provideGson(): Gson {
-        return GsonBuilder().serializeNulls().create()
-    }
+    fun provideGson(): Gson = GsonBuilder().serializeNulls().create()
 
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
+        val builder = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
-            .build()
+
+        if (BuildConfig.DEBUG) {
+            // HEADERS, not BODY: BODY buffers the whole response, which defeats SSE
+            // streaming, and would dump base64 images and prompts into logcat.
+            val logging = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.HEADERS
+                redactHeader("Authorization")
+            }
+            builder.addInterceptor(logging)
+        }
+        return builder.build()
     }
 
     @Provides
     @Singleton
-    @Named("GeminiRetrofit")
-    fun provideGeminiRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
-        return Retrofit.Builder()
-            .client(okHttpClient)
-            .baseUrl(GEMINI_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
-    }
+    @Named("ZhipuRetrofit")
+    fun provideZhipuRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit = Retrofit.Builder()
+        .client(okHttpClient)
+        .baseUrl(ZHIPU_BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
 
     @Provides
     @Singleton
     @Named("FruityviceRetrofit")
-    fun provideFruityviceRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
-        return Retrofit.Builder()
-            .client(okHttpClient)
-            .baseUrl(FRUITYVICE_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
-    }
+    fun provideFruityviceRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit = Retrofit.Builder()
+        .client(okHttpClient)
+        .baseUrl(FRUITYVICE_BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
 
     @Provides
     @Singleton
-    fun provideGenAIApiService(@Named("GeminiRetrofit") retrofit: Retrofit): GenAIApiService {
-        return retrofit.create(GenAIApiService::class.java)
-    }
+    fun provideGenAIApiService(@Named("ZhipuRetrofit") retrofit: Retrofit): GenAIApiService =
+        retrofit.create(GenAIApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideFruityviceApi(@Named("FruityviceRetrofit") retrofit: Retrofit): FruityviceApi {
-        return retrofit.create(FruityviceApi::class.java)
-    }
+    fun provideFruityviceApi(@Named("FruityviceRetrofit") retrofit: Retrofit): FruityviceApi =
+        retrofit.create(FruityviceApi::class.java)
 }
