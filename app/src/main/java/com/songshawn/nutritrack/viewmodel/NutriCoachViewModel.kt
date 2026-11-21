@@ -1,0 +1,166 @@
+package com.songshawn.nutritrack.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.songshawn.nutritrack.data.repository.DataSource
+import com.songshawn.nutritrack.data.repository.FruitResult
+import com.songshawn.nutritrack.data.repository.FruityviceRepository
+import com.songshawn.nutritrack.data.repository.PatientRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/**
+ * ViewModel for the NutriCoach screen handling fruit API data and patient information.
+ * Implements Stale-While-Revalidate strategy for optimal UX:
+ * - Shows cached data immediately for fast response
+ * - Refreshes from network in background
+ * - Updates UI when fresh data arrives
+ */
+@HiltViewModel
+class NutriCoachViewModel @Inject constructor(
+    private val repository: FruityviceRepository,
+    private val patientRepo: PatientRepository
+) : ViewModel() {
+
+    // UI state for fruit data
+    private val _fruitUiState = MutableStateFlow<FruitUiState>(FruitUiState.Initial)
+    val fruitUiState: StateFlow<FruitUiState> = _fruitUiState.asStateFlow()
+
+    // Current fruit search query
+    private val _fruitQuery = MutableStateFlow("")
+    val fruitQuery: StateFlow<String> = _fruitQuery
+
+    // Indicates data source for the last successful fetch
+    private val _dataSource = MutableStateFlow<DataSource?>(null)
+    val dataSource: StateFlow<DataSource?> = _dataSource.asStateFlow()
+
+    // Indicates if background revalidation is in progress
+    private val _isRevalidating = MutableStateFlow(false)
+    val isRevalidating: StateFlow<Boolean> = _isRevalidating.asStateFlow()
+
+    // Current search job for cancellation
+    private var searchJob: Job? = null
+
+    init {
+        // Clean up expired cache entries on ViewModel creation
+        viewModelScope.launch {
+            repository.cleanupExpiredCache()
+        }
+    }
+
+    /**
+     * Updates the current fruit search query
+     * @param query The new search query
+     */
+    fun updateQuery(query: String) {
+        _fruitQuery.value = query
+    }
+
+    /**
+     * Searches for fruit using Stale-While-Revalidate strategy.
+     * 
+     * Flow:
+     * 1. Show loading (or cached data if available)
+     * 2. If cache exists, show it immediately
+     * 3. Fetch fresh data from network in background
+     * 4. Update UI when fresh data arrives
+     */
+    fun searchFruit() {
+        // Cancel any ongoing search
+        searchJob?.cancel()
+        
+        searchJob = viewModelScope.launch {
+            _fruitUiState.value = FruitUiState.Loading
+            _dataSource.value = null
+            _isRevalidating.value = false
+
+            // Collect all emissions from the Flow (cached then network)
+            repository.getFruitFlow(_fruitQuery.value).collect { result ->
+                when (result) {
+                    is FruitResult.Success -> {
+                        _fruitUiState.value = FruitUiState.Success(result.data)
+                        _dataSource.value = result.source
+                        _isRevalidating.value = result.isRevalidating
+                    }
+                    is FruitResult.Error -> {
+                        _fruitUiState.value = FruitUiState.Error(
+                            "HTTP ${result.code} - ${result.message}"
+                        )
+                        _isRevalidating.value = false
+                    }
+                    is FruitResult.NetworkError -> {
+                        _fruitUiState.value = FruitUiState.Error(
+                            result.exception.localizedMessage ?: "Network error"
+                        )
+                        _isRevalidating.value = false
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets the fruit score for a specific user
+     * @param userId ID of the user
+     * @return Flow of the user's fruit score
+     */
+    fun getFruitScore(userId: String): Flow<Double> {
+        return patientRepo.getPatientFlow(userId).map { it?.fruitScore ?: 0.0 }
+    }
+
+    /**
+     * Gets the fruit variations score for a specific user
+     * @param userId ID of the user
+     * @return Flow of the user's fruit variations score
+     */
+    fun getFruitVariationsScore(userId: String): Flow<Double> {
+        return patientRepo.getPatientFlow(userId).map { it?.fruitVariantionsScore ?: 0.0 }
+    }
+
+    /**
+     * Gets the fruit serve size for a specific user
+     * @param userId ID of the user
+     * @return Flow of the user's fruit serve size
+     */
+    fun getFruitServeSize(userId: String): Flow<Double> {
+        return patientRepo.getPatientFlow(userId).map { it?.fruitServeSize ?: 0.0 }
+    }
+
+    /**
+     * Checks if the user's fruit metrics are below optimal thresholds
+     * @param userId ID of the user
+     * @return Flow of boolean indicating if fruit metrics are below optimal (true if improvement needed)
+     */
+    fun checkIfFruitScoreNeedsImprovement(userId: String): Flow<Boolean> {
+        return combine(
+            getFruitScore(userId),
+            getFruitVariationsScore(userId),
+            getFruitServeSize(userId)
+        ) { fruitScore, fruitVariationsScore, fruitServeSize ->
+            fruitScore < 5.0 && fruitVariationsScore < 2.5 && fruitServeSize < 1.0
+        }
+    }
+
+    /**
+     * Resets the fruit search state
+     */
+    fun resetState() {
+        searchJob?.cancel()
+        _fruitUiState.value = FruitUiState.Initial
+        _dataSource.value = null
+        _isRevalidating.value = false
+    }
+
+    /**
+     * Gets the count of cached fruits
+     */
+    suspend fun getCacheCount(): Int = repository.getCacheCount()
+}

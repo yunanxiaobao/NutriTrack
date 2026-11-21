@@ -19,7 +19,7 @@ if (localPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.haoshuang_34517812.nutritrack"
+    namespace = "com.songshawn.nutritrack"
     compileSdk = 36
 
     defaultConfig {
