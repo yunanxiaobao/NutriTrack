@@ -11,8 +11,8 @@ the others.
 - [x] Rename misleading APIs (`askGemini` → `generateText` / `streamText`)
 - [x] Clean up the version catalog: remove duplicates, unused libraries and the `x.y.z` placeholder; pin stable versions instead of an accidental RC
 - [x] HTTP logging only in debug builds, `Authorization` header redacted, no BODY logging (it buffered SSE streams)
-- [ ] CI with GitHub Actions: build, unit tests, Android Lint, detekt
-- [ ] `AGENTS.md` / `CLAUDE.md`: project conventions for AI coding agents
+- [x] CI with GitHub Actions: build, unit tests, Android Lint, detekt
+- [x] `AGENTS.md` / `CLAUDE.md`: project conventions for AI coding agents
 
 ## Phase 1 — Food logging (database, Android)
 
