@@ -9,6 +9,7 @@ import com.songshawn.nutritrack.data.room.dao.MealLogDao
 import com.songshawn.nutritrack.data.room.dao.NutriCoachTipDao
 import com.songshawn.nutritrack.data.room.dao.PatientDao
 import com.songshawn.nutritrack.data.room.dao.QuestionnaireInfoDao
+import com.songshawn.nutritrack.data.room.dao.SyncOutboxDao
 import com.songshawn.nutritrack.data.room.database.NutriTrackDatabase
 import com.songshawn.nutritrack.domain.agent.LlmClient
 import com.songshawn.nutritrack.domain.agent.NutriCoachToolHost
@@ -69,6 +70,11 @@ object AppModule {
     @Singleton
     fun provideAgentMemoryDao(database: NutriTrackDatabase): AgentMemoryDao =
         database.agentMemoryDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncOutboxDao(database: NutriTrackDatabase): SyncOutboxDao =
+        database.syncOutboxDao()
 
     @Provides
     @Singleton

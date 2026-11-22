@@ -15,6 +15,7 @@ import com.songshawn.nutritrack.data.room.dao.MealLogDao
 import com.songshawn.nutritrack.data.room.dao.NutriCoachTipDao
 import com.songshawn.nutritrack.data.room.dao.PatientDao
 import com.songshawn.nutritrack.data.room.dao.QuestionnaireInfoDao
+import com.songshawn.nutritrack.data.room.dao.SyncOutboxDao
 import com.songshawn.nutritrack.data.room.entity.AgentMessageEntity
 import com.songshawn.nutritrack.data.room.entity.AgentSessionSummaryEntity
 import com.songshawn.nutritrack.data.room.entity.DailyScoreEntity
@@ -26,6 +27,7 @@ import com.songshawn.nutritrack.data.room.entity.MealLogItemEntity
 import com.songshawn.nutritrack.data.room.entity.NutriCoachTipEntity
 import com.songshawn.nutritrack.data.room.entity.PatientEntity
 import com.songshawn.nutritrack.data.room.entity.QuestionnaireInfoEntity
+import com.songshawn.nutritrack.data.room.entity.SyncOutboxEntity
 import com.songshawn.nutritrack.util.Constants
 import com.songshawn.nutritrack.util.Converters
 
@@ -42,8 +44,9 @@ import com.songshawn.nutritrack.util.Converters
         DailyScoreEntity::class,
         AgentMessageEntity::class,
         AgentSessionSummaryEntity::class,
+        SyncOutboxEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -56,6 +59,7 @@ abstract class NutriTrackDatabase : RoomDatabase() {
     abstract fun mealLogDao(): MealLogDao
     abstract fun dailyScoreDao(): DailyScoreDao
     abstract fun agentMemoryDao(): AgentMemoryDao
+    abstract fun syncOutboxDao(): SyncOutboxDao
 
     companion object {
         @Volatile
@@ -253,6 +257,34 @@ abstract class NutriTrackDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration 8 -> 9: Adds durable transactional outbox (`sync_outbox`) for reliable
+         * WorkManager background Firestore synchronization with UUID idempotency.
+         */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `sync_outbox` (
+                        `documentUuid` TEXT NOT NULL,
+                        `userId` TEXT NOT NULL,
+                        `entityType` TEXT NOT NULL,
+                        `firestoreDocumentPath` TEXT NOT NULL,
+                        `payloadJson` TEXT NOT NULL,
+                        `attemptCount` INTEGER NOT NULL,
+                        `lastError` TEXT,
+                        `createdAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`documentUuid`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_sync_outbox_userId_createdAt` " +
+                        "ON `sync_outbox` (`userId`, `createdAt`)",
+                )
+            }
+        }
+
         fun getDatabase(context: Context): NutriTrackDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -260,7 +292,7 @@ abstract class NutriTrackDatabase : RoomDatabase() {
                     NutriTrackDatabase::class.java,
                     Constants.DATABASE_NAME,
                 )
-                    .addMigrations(MIGRATION_3_4, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_3_4, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .build()
                 INSTANCE = instance
                 instance

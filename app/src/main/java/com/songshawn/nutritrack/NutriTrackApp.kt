@@ -3,6 +3,7 @@ package com.songshawn.nutritrack
 import android.app.Application
 import android.content.Context
 import com.songshawn.nutritrack.data.repository.PatientRepository
+import com.songshawn.nutritrack.di.ApplicationScope
 import com.songshawn.nutritrack.util.AuthenticationManager
 import com.songshawn.nutritrack.util.Constants
 import com.songshawn.nutritrack.util.CsvInitializer
@@ -10,8 +11,6 @@ import com.songshawn.nutritrack.util.DemoDataConfig
 import com.songshawn.nutritrack.util.DemoPersonaSeeder
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,7 +23,9 @@ class NutriTrackApp : Application() {
     @Inject
     lateinit var demoPersonaSeeder: DemoPersonaSeeder
 
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    @Inject
+    @ApplicationScope
+    lateinit var applicationScope: CoroutineScope
 
     companion object {
         private const val PREFS_NAME = Constants.SHARED_PREFS_NAME
@@ -47,7 +48,7 @@ class NutriTrackApp : Application() {
     }
 
     private fun initializeDataIfNeeded() {
-        appScope.launch {
+        applicationScope.launch {
             demoPersonaSeeder.seedIfNeeded()
         }
 
@@ -56,6 +57,7 @@ class NutriTrackApp : Application() {
             CsvInitializer.init(
                 application = this,
                 repository = patientRepository,
+                scope = applicationScope,
                 csvFileName = Constants.DATASET_NAME,
                 forceImport = false,
                 onComplete = { success ->

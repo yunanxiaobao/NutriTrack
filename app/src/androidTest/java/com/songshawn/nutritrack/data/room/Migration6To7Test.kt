@@ -105,4 +105,32 @@ class Migration6To7Test {
         }
         migratedDb.close()
     }
+
+    @Test
+    fun migrate8To9_createsSyncOutboxTable() {
+        helper.createDatabase(testDbName, 8).close()
+        val migratedDb = helper.runMigrationsAndValidate(
+            testDbName,
+            9,
+            true,
+            NutriTrackDatabase.MIGRATION_8_9,
+        )
+        migratedDb.execSQL(
+            """
+            INSERT INTO sync_outbox (
+                documentUuid, userId, entityType, firestoreDocumentPath,
+                payloadJson, attemptCount, lastError, createdAt
+            ) VALUES (
+                '550e8400-e29b-41d4-a716-446655440000', 'u_legacy', 'TIP',
+                'users/u_legacy/tips/550e8400-e29b-41d4-a716-446655440000',
+                '{"tipContent":"Eat more greens"}', 0, NULL, 1700000000
+            )
+            """.trimIndent(),
+        )
+        migratedDb.query("SELECT entityType FROM sync_outbox WHERE userId = 'u_legacy'").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("TIP", cursor.getString(0))
+        }
+        migratedDb.close()
+    }
 }
