@@ -39,3 +39,6 @@ render.experimental.xml
 
 # Local secrets
 secrets.properties
+
+# Kotlin daemon sessions
+.kotlin/

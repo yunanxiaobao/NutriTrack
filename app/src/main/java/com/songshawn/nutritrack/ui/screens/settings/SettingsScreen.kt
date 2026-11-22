@@ -13,11 +13,16 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +36,7 @@ import com.songshawn.nutritrack.navigation.Routes
 import com.songshawn.nutritrack.ui.components.BottomNavigationBar
 import com.songshawn.nutritrack.util.DemoDataConfig
 import com.songshawn.nutritrack.viewmodel.SettingsViewModel
+import com.songshawn.nutritrack.worker.DailyMealReminderWorker
 
 /**
  * Settings screen showing app settings and configuration options
@@ -95,6 +101,11 @@ private fun SettingsHeader() {
  */
 @Composable
 private fun SettingsItemsList(navController: NavController) {
+    val context = LocalContext.current
+    var reminderEnabled by remember {
+        mutableStateOf(DailyMealReminderWorker.isReminderEnabled(context))
+    }
+
     SettingItem(
         title = "Account",
         icon = Icons.Outlined.AccountCircle,
@@ -105,6 +116,15 @@ private fun SettingsItemsList(navController: NavController) {
         title = "Scores",
         icon = Icons.Outlined.Search,
         onClick = { navController.navigate(Routes.INSIGHTS) }
+    )
+
+    SettingSwitchItem(
+        title = "Daily Meal Reminder",
+        checked = reminderEnabled,
+        onCheckedChange = { enabled ->
+            reminderEnabled = enabled
+            DailyMealReminderWorker.setReminderEnabled(context, enabled)
+        }
     )
 
     SettingItem(

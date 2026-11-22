@@ -42,11 +42,11 @@ the others.
 
 ## Phase 4 — Concurrency, background work, offline
 
-- [ ] WorkManager sync with an outbox table, exponential backoff, idempotent UUID document IDs
-- [ ] Injected application `CoroutineScope` and dispatchers; `Mutex` where needed
-- [ ] Debounced search with `flatMapLatest`
-- [ ] Throttled recomposition while streaming (measured); downscale images before upload
-- [ ] Daily reminder notification
+- [x] WorkManager sync with an outbox table, exponential backoff, idempotent UUID document IDs
+- [x] Injected application `CoroutineScope` and dispatchers; `Mutex` where needed
+- [x] Debounced search with `flatMapLatest`
+- [x] Throttled recomposition while streaming (measured); downscale images before upload
+- [x] Daily reminder notification
 
 ## Phase 5 — Architecture and tests
 

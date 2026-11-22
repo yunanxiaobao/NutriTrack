@@ -14,6 +14,7 @@ import com.songshawn.nutritrack.data.repository.StreamResult
 import com.songshawn.nutritrack.data.room.entity.NutriCoachTipEntity
 import com.songshawn.nutritrack.data.room.entity.PatientEntity
 import com.songshawn.nutritrack.data.room.entity.QuestionnaireInfoEntity
+import com.songshawn.nutritrack.util.throttleChunks
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -389,7 +390,7 @@ class GenAIViewModel @Inject constructor(
             _ui.value = GenAiUiState.Streaming("", isComplete = false)
             _state.value = ApiResult.Loading
 
-            repo.streamText(prompt).collect { result ->
+            repo.streamText(prompt).throttleChunks(windowMs = 48L).collect { result ->
                 when (result) {
                     is StreamResult.Chunk -> {
                         // Append new chunk to accumulated text
