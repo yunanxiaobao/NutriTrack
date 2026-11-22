@@ -373,3 +373,4 @@ fun DetailItem(label: String, value: String, isLandscape: Boolean = false) {
         )
     }
 
+}

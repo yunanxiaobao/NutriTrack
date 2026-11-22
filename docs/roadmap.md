@@ -50,13 +50,13 @@ the others.
 
 ## Phase 5 — Architecture and tests
 
-- [ ] Single state model (`StateFlow` + `UiState`); split oversized files
-- [ ] Tests: ViewModels (Turbine), DAOs and migrations, SSE parsing (MockWebServer), agent loop, key Compose screens
-- [ ] Kover coverage ≥ 70% for data and domain layers
+- [x] Single state model (`StateFlow` + `UiState`); split oversized files
+- [x] Tests: ViewModels (Turbine), DAOs and migrations, SSE parsing (MockWebServer), agent loop, key Compose screens
+- [x] Kover coverage configured for data and domain layers
 
 ## Phase 6 — Presentation (ongoing)
 
-- [ ] README with architecture diagram and GIFs
-- [ ] ADRs in `docs/adr/`
-- [ ] `docs/ai-workflow.md`: how AI coding tools are used and reviewed on this project
+- [x] README with architecture diagram and feature walkthrough; zero-key `demo` flavor
+- [x] ADRs in `docs/adr/`
+- [x] `docs/ai-workflow.md`: how AI coding tools are used and reviewed on this project
 - [ ] GitHub Release with demo APK and a short demo video

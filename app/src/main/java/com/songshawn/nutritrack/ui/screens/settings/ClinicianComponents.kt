@@ -522,4 +522,3 @@ fun UserListItem(
         )
     }
 }
-}
