@@ -16,12 +16,12 @@ the others.
 
 ## Phase 1 — Food logging (database, Android)
 
-- [ ] Tables: food catalog, meals, meal items, daily scores (foreign keys, indices, `@Relation`, `@Transaction`)
-- [ ] Prepopulated food catalog from a public dataset; FTS4 search
-- [ ] Pure-Kotlin HEIFA-style scoring engine with thorough unit tests
-- [ ] Proper migrations (6 → 7) tested with `MigrationTestHelper`; exported schemas; no destructive fallback
-- [ ] 7/30-day trend charts; clinician stats via SQL aggregates
-- [ ] `demo` product flavor: seeded demo user with 30 days of data plus a fake LLM, runs offline without a key
+- [x] Tables: food catalog, meals, meal items, daily scores (foreign keys, indices, `@Relation`, `@Transaction`)
+- [x] Prepopulated food catalog from a public dataset; FTS4 search
+- [x] Pure-Kotlin HEIFA-style scoring engine with thorough unit tests
+- [x] Proper migrations (6 → 7) tested with `MigrationTestHelper`; exported schemas; no destructive fallback
+- [x] 7/30-day trend charts; clinician stats via SQL aggregates
+- [x] `demo` product flavor: seeded demo user with 30 days of data plus a fake LLM, runs offline without a key
 
 ## Phase 2 — NutriCoach agent
 

@@ -9,13 +9,14 @@ This file defines the project conventions, verification gates, and architectural
 Before considering any task complete or opening a PR, run the full verification suite:
 
 ```bash
-./gradlew detekt lintDebug testDebugUnitTest assembleDebug --console=plain
+./gradlew detekt lintProdDebug testProdDebugUnitTest testDemoDebugUnitTest assembleProdDebug assembleDemoDebug --console=plain
 ```
 
-- **Build debug APK:** `./gradlew assembleDebug`
-- **Run unit tests:** `./gradlew testDebugUnitTest`
+- **Build offline-ready Demo APK:** `./gradlew assembleDemoDebug`
+- **Build Production flavor APK:** `./gradlew assembleProdDebug`
+- **Run unit tests:** `./gradlew testProdDebugUnitTest testDemoDebugUnitTest`
 - **Static analysis (Kotlin):** `./gradlew detekt` (config in `config/detekt/detekt.yml`, baseline in `app/detekt-baseline.xml`)
-- **Android Lint:** `./gradlew lintDebug` (baseline in `app/lint-baseline.xml`)
+- **Android Lint:** `./gradlew lintProdDebug` (baseline in `app/lint-baseline.xml`)
 
 > **Rule:** Never expand `detekt-baseline.xml` or `lint-baseline.xml` to silence new issues introduced by your changes. Fix new findings in-place.
 

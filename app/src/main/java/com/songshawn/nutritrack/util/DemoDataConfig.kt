@@ -1,14 +1,18 @@
 package com.songshawn.nutritrack.util
 
+import com.songshawn.nutritrack.BuildConfig
+
 /**
- * The course HEIFA dataset (assets/data.csv) is demo/seed data only.
+ * Controls demo dataset and persona seeding.
  *
- * Since the Firebase account migration, consumer builds never seed it:
- * accounts are real user accounts, not rows of a course dataset. Seeding
- * stays available for debug builds (e.g. clinician demos, coursework
- * screenshots) by flipping this flag in a local debug change - it must
- * never ship enabled.
+ * Automatically enabled in the `demo` product flavor (`BuildConfig.IS_DEMO_MODE == true`)
+ * so interview and offline demo builds start with a signed-in demo user, 30 days of meal
+ * logs and HEIFA score trends, and simulated LLM responses when no API key is present.
  */
 object DemoDataConfig {
-    val isEnabled: Boolean = false
+    const val DEMO_USER_ID = "demo_alex_rivera"
+    const val DEMO_DISPLAY_NAME = "Alex Rivera"
+    const val DEMO_EMAIL = "alex.rivera@demo.nutritrack.app"
+
+    val isEnabled: Boolean get() = BuildConfig.IS_DEMO_MODE
 }

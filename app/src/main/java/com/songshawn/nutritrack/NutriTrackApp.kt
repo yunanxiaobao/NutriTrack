@@ -5,9 +5,14 @@ import android.content.Context
 import com.songshawn.nutritrack.data.repository.PatientRepository
 import com.songshawn.nutritrack.util.AuthenticationManager
 import com.songshawn.nutritrack.util.Constants
-import com.songshawn.nutritrack.util.DemoDataConfig
 import com.songshawn.nutritrack.util.CsvInitializer
+import com.songshawn.nutritrack.util.DemoDataConfig
+import com.songshawn.nutritrack.util.DemoPersonaSeeder
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -16,17 +21,19 @@ class NutriTrackApp : Application() {
     @Inject
     lateinit var patientRepository: PatientRepository
 
+    @Inject
+    lateinit var demoPersonaSeeder: DemoPersonaSeeder
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     companion object {
         private const val PREFS_NAME = Constants.SHARED_PREFS_NAME
 
-        // Check if data is already initialized
         private fun isDataInitialized(context: Context): Boolean {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val initialized = prefs.getBoolean(Constants.KEY_DATA_INITIALIZED, false)
-            return initialized
+            return prefs.getBoolean(Constants.KEY_DATA_INITIALIZED, false)
         }
 
-        // Mark data as initialized
         private fun setDataInitialized(context: Context) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putBoolean(Constants.KEY_DATA_INITIALIZED, true).apply()
@@ -35,19 +42,17 @@ class NutriTrackApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
         AuthenticationManager.init(this)
-
-        // Initialize CSV data only if not already done
         initializeDataIfNeeded()
     }
 
     private fun initializeDataIfNeeded() {
-        // Consumer builds never seed the course dataset: accounts are real
-        // Firebase accounts now. Demo seeding is debug-only, see DemoDataConfig.
-        if (!BuildConfig.DEBUG || !DemoDataConfig.isEnabled) return
-        if (!isDataInitialized(applicationContext)) {
+        appScope.launch {
+            demoPersonaSeeder.seedIfNeeded()
+        }
 
+        if (!DemoDataConfig.isEnabled) return
+        if (!isDataInitialized(applicationContext)) {
             CsvInitializer.init(
                 application = this,
                 repository = patientRepository,
@@ -57,7 +62,7 @@ class NutriTrackApp : Application() {
                     if (success) {
                         setDataInitialized(applicationContext)
                     }
-                }
+                },
             )
         }
     }

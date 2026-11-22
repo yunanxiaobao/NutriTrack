@@ -43,6 +43,19 @@ android {
         buildConfigField("String", "ZHIPU_API_KEY", "\"${zhipuApiKey()}\"")
     }
 
+    flavorDimensions += "mode"
+    productFlavors {
+        create("prod") {
+            dimension = "mode"
+            buildConfigField("boolean", "IS_DEMO_MODE", "false")
+        }
+        create("demo") {
+            dimension = "mode"
+            versionNameSuffix = "-demo"
+            buildConfigField("boolean", "IS_DEMO_MODE", "true")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -59,6 +72,10 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    sourceSets {
+        // Expose exported Room JSON schemas to MigrationTestHelper in androidTest
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
     lint {
         // Existing issues are recorded in the baseline; CI fails on anything new.
@@ -122,6 +139,7 @@ dependencies {
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)

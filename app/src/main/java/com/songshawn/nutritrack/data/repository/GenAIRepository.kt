@@ -10,9 +10,11 @@ import com.songshawn.nutritrack.data.network.genai.ImageUrl
 import com.songshawn.nutritrack.data.network.genai.OpenAIMessage
 import com.songshawn.nutritrack.data.network.genai.OpenAIRequest
 import com.songshawn.nutritrack.data.network.genai.OpenAIStreamResponse
+import com.songshawn.nutritrack.util.DemoDataConfig
 import com.songshawn.nutritrack.viewmodel.ApiResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -22,19 +24,23 @@ import java.io.IOException
 import javax.inject.Inject
 
 /**
- * Talks to Zhipu AI's OpenAI-compatible `chat/completions` endpoint.
- *
- * Note: the API key is still read from BuildConfig here. Moving it behind a
- * server-side proxy is tracked as a separate change (see docs/roadmap.md).
+ * Talks to Zhipu AI's OpenAI-compatible `chat/completions` endpoint, with an offline
+ * simulation fallback in the `demo` product flavor when no API key is configured.
  */
 class GenAIRepository @Inject constructor(
     private val apiService: GenAIApiService,
 ) {
     private val gson = Gson()
-    private val authHeader: String get() = "Bearer ${BuildConfig.ZHIPU_API_KEY}"
+    private val apiKey: String get() = BuildConfig.ZHIPU_API_KEY
+    private val authHeader: String get() = "Bearer $apiKey"
+    private val useDemoOfflineLlm: Boolean get() = DemoDataConfig.isEnabled && apiKey.isBlank()
 
     /** Single-shot text completion. */
     suspend fun generateText(prompt: String): ApiResult<String> = withContext(Dispatchers.IO) {
+        if (useDemoOfflineLlm) {
+            delay(180L)
+            return@withContext ApiResult.Success(buildDemoCoachingResponse(prompt))
+        }
         runCatchingApi {
             val request = OpenAIRequest(
                 model = TEXT_MODEL,
@@ -57,13 +63,20 @@ class GenAIRepository @Inject constructor(
     }
 
     /**
-     * Streams a text completion via Server-Sent Events.
-     *
-     * Emits [StreamResult.Chunk] for each delta, then exactly one terminal
-     * [StreamResult.Complete] or [StreamResult.Error]. Cancellation of the
-     * collector propagates and closes the underlying HTTP stream.
+     * Streams a text completion via Server-Sent Events (or simulated chunks in offline demo mode).
      */
     fun streamText(prompt: String): Flow<StreamResult> = flow {
+        if (useDemoOfflineLlm) {
+            val fullText = buildDemoCoachingResponse(prompt)
+            val words = fullText.split(" ")
+            for (word in words) {
+                delay(20L)
+                emit(StreamResult.Chunk("$word "))
+            }
+            emit(StreamResult.Complete)
+            return@flow
+        }
+
         try {
             val request = OpenAIRequest(
                 model = TEXT_MODEL,
@@ -81,7 +94,6 @@ class GenAIRepository @Inject constructor(
                 return@flow
             }
 
-            // `use` guarantees the connection is released even if the collector is cancelled.
             body.byteStream().bufferedReader().use { reader ->
                 while (true) {
                     val line = reader.readLine() ?: break
@@ -92,8 +104,8 @@ class GenAIRepository @Inject constructor(
 
                     val chunk = try {
                         gson.fromJson(data, OpenAIStreamResponse::class.java)
-                    } catch (e: com.google.gson.JsonSyntaxException) {
-                        continue // skip a malformed frame rather than aborting the whole answer
+                    } catch (_: com.google.gson.JsonSyntaxException) {
+                        continue
                     }
                     val choice = chunk.choices?.firstOrNull()
                     val content = choice?.delta?.content
@@ -113,6 +125,10 @@ class GenAIRepository @Inject constructor(
 
     /** Asks the vision model to name the fruit in [bitmap]. */
     suspend fun identifyFruitFromImage(bitmap: Bitmap): ApiResult<String> = withContext(Dispatchers.IO) {
+        if (useDemoOfflineLlm) {
+            delay(200L)
+            return@withContext ApiResult.Success("Banana")
+        }
         runCatchingApi {
             val contentParts = listOf(
                 ContentPart(type = "image_url", imageUrl = ImageUrl(url = "data:image/jpeg;base64,${bitmap.toBase64Jpeg()}")),
@@ -136,6 +152,23 @@ class GenAIRepository @Inject constructor(
         }
     }
 
+    private fun buildDemoCoachingResponse(prompt: String): String =
+        if (prompt.contains("clinician", ignoreCase = true) || prompt.contains("cohort", ignoreCase = true)) {
+            "1. **Vegetable Variety Gap**: Across the cohort, quantity reaches ~65% of target while " +
+                "sub-category diversity lags; rotating dark-green, cruciferous, and legume serves yields the " +
+                "fastest HEIFA gain.\n" +
+                "2. **Wholegrain Substitution**: Participants replacing refined grains with rolled oats or " +
+                "brown rice average +4.2 points higher total HEIFA scores.\n" +
+                "3. **Hydration & Discretionary Moderation**: Keeping discretionary treats at <=1 serve/day " +
+                "and water >=1.5L strongly correlates with top-quartile scores (>80/100)."
+        } else {
+            "### Personalized NutriCoach Tip (Demo Mode)\n" +
+                "- **Strong Whole-Food Foundation**: Your logged meals show consistent wholegrain oats, " +
+                "colorful vegetables (spinach, broccoli, carrots, lentils), and omega-3 rich salmon.\n" +
+                "- **Next +5 Point Opportunity**: Add one extra half-cup of legumes or dark-green vegetables " +
+                "at lunch and keep daily water intake at 3 glasses (1,500 mL) to lock in a 90+ HEIFA score."
+        }
+
     private inline fun <T> runCatchingApi(block: () -> ApiResult<T>): ApiResult<T> = try {
         block()
     } catch (ce: CancellationException) {
@@ -153,12 +186,8 @@ class GenAIRepository @Inject constructor(
     }
 
     private companion object {
-        /** Free tier text model. */
         const val TEXT_MODEL = "glm-4-flash"
-
-        /** Stable vision model; the one this feature was tested against. */
         const val VISION_MODEL = "glm-4v"
-
         const val FRUIT_PROMPT =
             "Identify this fruit and return only the fruit name in English. If it's not a fruit, return 'Not a fruit'."
     }
@@ -166,12 +195,7 @@ class GenAIRepository @Inject constructor(
 
 /** Result of a streaming AI response. */
 sealed class StreamResult {
-    /** An incremental piece of the answer. */
     data class Chunk(val text: String) : StreamResult()
-
-    /** The stream finished normally. */
     data object Complete : StreamResult()
-
-    /** The stream failed; no further items will be emitted. */
     data class Error(val message: String) : StreamResult()
 }

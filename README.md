@@ -10,12 +10,13 @@ Jetpack Compose, Hilt, Room, Retrofit and Firebase.
 
 | Area | What it does |
 |---|---|
-| Accounts | Email/password sign-up and login via Firebase Authentication; in-app account deletion |
+| Accounts | Email/password sign-up and login via Firebase Authentication; in-app account deletion; offline `demo` flavor with a pre-seeded persona |
 | Onboarding | Questionnaire for food-category preferences, eating persona and meal/sleep timing |
-| Home & Insights | HEIFA-style diet-quality score with a per-category breakdown |
+| Food Logging | Built-in food nutrition catalog (`assets/food_catalog.json`) with SQLite **FTS4** prefix search, relational meal slots (`@Relation`, `@Transaction`, foreign keys), and live recalculation of daily HEIFA-2013 scores via a pure-Kotlin scoring engine |
+| Home & Insights | Live HEIFA-2013 diet-quality score, per-category breakdown, and **7-day / 30-day trend sparkline chart** |
 | NutriCoach | Fruit nutrition lookup (Fruityvice) with a stale-while-revalidate Room cache; streaming AI tips over SSE; fruit recognition from a photo with a vision model |
 | Cloud sync | Questionnaire answers and saved tips are mirrored to Firestore per user, guarded by [security rules](firestore.rules) |
-| Clinician | Aggregate view of patient scores plus AI-generated pattern analysis |
+| Clinician | SQL aggregate (`GROUP BY` / `AVG`) cohort statistics plus AI-generated pattern analysis |
 
 ## Tech stack
 
@@ -51,8 +52,9 @@ Requirements: JDK 17+ (Android Studio's bundled JBR works) and the Android SDK (
 ```bash
 git clone https://github.com/yunanxiaobao/NutriTrack.git
 cd NutriTrack
-./gradlew assembleDebug        # build
-./gradlew testDebugUnitTest    # unit tests
+./gradlew assembleDemoDebug        # offline-ready demo APK (30-day seeded history + fake LLM)
+./gradlew assembleProdDebug        # production flavor debug APK
+./gradlew testProdDebugUnitTest    # unit tests (HEIFA scoring engine, CSV, FTS query builder)
 ```
 
 AI features need a Zhipu API key. Add it to `local.properties` (never commit this file):

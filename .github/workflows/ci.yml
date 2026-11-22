@@ -33,13 +33,13 @@ jobs:
         run: ./gradlew detekt --console=plain
 
       - name: Run Android Lint
-        run: ./gradlew lintDebug --console=plain
+        run: ./gradlew lintProdDebug --console=plain
 
-      - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --console=plain
+      - name: Run Unit Tests (Prod & Demo flavors)
+        run: ./gradlew testProdDebugUnitTest testDemoDebugUnitTest --console=plain
 
-      - name: Assemble Debug APK
-        run: ./gradlew assembleDebug --console=plain
+      - name: Assemble Prod & Demo Debug APKs
+        run: ./gradlew assembleProdDebug assembleDemoDebug --console=plain
 
       - name: Upload Test & Lint Reports on failure
         if: failure()
