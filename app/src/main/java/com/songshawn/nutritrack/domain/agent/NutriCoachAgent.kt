@@ -1,6 +1,7 @@
 package com.songshawn.nutritrack.domain.agent
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -78,6 +79,11 @@ class NutriCoachAgent @Inject constructor(
                     onStepProgress = onStepProgress,
                 )
             }
+        } catch (tce: TimeoutCancellationException) {
+            AgentRunOutcome.Failed(
+                errorMessage = tce.message ?: "Agent timed out after ${timeoutMs}ms",
+                traceSteps = traceSteps.toList(),
+            )
         } catch (ce: CancellationException) {
             throw ce
         } catch (t: Throwable) {

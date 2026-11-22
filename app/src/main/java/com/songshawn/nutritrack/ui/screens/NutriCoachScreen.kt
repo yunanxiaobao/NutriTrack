@@ -53,12 +53,14 @@ import com.songshawn.nutritrack.data.network.fruityvice.FruitDto
 import com.songshawn.nutritrack.theme.LightGreen
 import com.songshawn.nutritrack.ui.components.BottomNavigationBar
 import com.songshawn.nutritrack.ui.components.GenAIAdviceComponent
+import com.songshawn.nutritrack.ui.components.NutriCoachAgentSection
 import com.songshawn.nutritrack.ui.components.TipHistoryDialog
 import com.songshawn.nutritrack.util.getFruitEmoji
 import com.songshawn.nutritrack.viewmodel.ApiResult
 import com.songshawn.nutritrack.viewmodel.FruitUiState
 import com.songshawn.nutritrack.viewmodel.GenAIViewModel
 import com.songshawn.nutritrack.viewmodel.GenAiUiState
+import com.songshawn.nutritrack.viewmodel.NutriCoachAgentViewModel
 import com.songshawn.nutritrack.viewmodel.NutriCoachViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -79,13 +81,19 @@ fun NutriCoachScreen(
     userId: String,
     navController: NavController,
     viewModel: NutriCoachViewModel = hiltViewModel(),
-    genAiViewModel: GenAIViewModel = hiltViewModel()
+    genAiViewModel: GenAIViewModel = hiltViewModel(),
+    agentViewModel: NutriCoachAgentViewModel = hiltViewModel(),
 ) {
     // State collection
     val fruitScore by viewModel.getFruitScore(userId).collectAsState(initial = 100.0)
     val fruitUiState by viewModel.fruitUiState.collectAsStateWithLifecycle()
     val aiResult by genAiViewModel.state.collectAsState()
     val tipHistory by genAiViewModel.getTipsForUser(userId).collectAsState(initial = emptyList())
+    val agentUiState by agentViewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(userId) {
+        agentViewModel.bindUser(userId)
+    }
 
     val needsImprovement by viewModel.checkIfFruitScoreNeedsImprovement(userId)
         .collectAsState(initial = false)
@@ -113,6 +121,7 @@ fun NutriCoachScreen(
     // Camera integration
     val context = LocalContext.current
     var currentPhotoUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var isMealPlateCameraCapture by remember { mutableStateOf(false) }
 
     val identifiedFruit by genAiViewModel.identifiedFruit.collectAsState()
     val genAiUiState by genAiViewModel.ui.collectAsState()
@@ -162,7 +171,11 @@ fun NutriCoachScreen(
     ) { success ->
         if (success && currentPhotoUri != null) {
             currentPhotoUri?.let { uri ->
-                genAiViewModel.identifyFruit(uri)
+                if (isMealPlateCameraCapture) {
+                    agentViewModel.analyzeMealPlatePhoto(uri)
+                } else {
+                    genAiViewModel.identifyFruit(uri)
+                }
             }
         }
     }
@@ -182,7 +195,8 @@ fun NutriCoachScreen(
         }
     }
 
-    val onCameraClick = {
+    val launchCameraWithMode: (Boolean) -> Unit = { mealPlateMode ->
+        isMealPlateCameraCapture = mealPlateMode
         val permissionCheckResult = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
         if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
             val photoFile = createImageFile(context)
@@ -197,6 +211,8 @@ fun NutriCoachScreen(
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
+    val onCameraClick = { launchCameraWithMode(false) }
+    val onMealPlateCameraClick = { launchCameraWithMode(true) }
 
     // Reset GenAI state when screen is disposed
     DisposableEffect(Unit) {
@@ -233,50 +249,87 @@ fun NutriCoachScreen(
         }
     ) { innerPadding ->
         // Render different layouts based on orientation
-        if (isLandscape) {
-            LandscapeNutriCoachLayout(
-                innerPadding = innerPadding,
-                fruitUiState = fruitUiState,
-                needsImprove = needsImprovement,
-                aiResult = aiResult,
-                genAiViewModel = genAiViewModel,
-                userId = userId,
-                localQuery = localQuery,
-                onQueryChange = { localQuery = it },
-                fruitCardExpanded = fruitCardExpanded,
-                onExpandedChange = { fruitCardExpanded = it },
-                focusRequester = focusRequester,
-                focusManager = focusManager,
-                viewModel = viewModel,
-                defaultPrompt = defaultPrompt,
-                suggestedPromptsShort = suggestedPromptsShort,
-                suggestedPromptsFull = suggestedPromptsFull,
-                onShowHistory = { showTipHistory = true },
-                scrollState = scrollState,
-                onCameraClick = onCameraClick
-            )
-        } else {
-            PortraitNutriCoachLayout(
-                innerPadding = innerPadding,
-                needsImprove = needsImprovement,
-                fruitUiState = fruitUiState,
-                aiResult = aiResult,
-                genAiViewModel = genAiViewModel,
-                userId = userId,
-                localQuery = localQuery,
-                onQueryChange = { localQuery = it },
-                fruitCardExpanded = fruitCardExpanded,
-                onExpandedChange = { fruitCardExpanded = it },
-                focusRequester = focusRequester,
-                focusManager = focusManager,
-                viewModel = viewModel,
-                defaultPrompt = defaultPrompt,
-                suggestedPromptsShort = suggestedPromptsShort,
-                suggestedPromptsFull = suggestedPromptsFull,
-                onShowHistory = { showTipHistory = true },
-                scrollState = scrollState,
-                onCameraClick = onCameraClick
-            )
+        var showClassicTools by remember { mutableStateOf(false) }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+                .verticalScroll(scrollState),
+        ) {
+            NutriCoachHeader()
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = !showClassicTools,
+                    onClick = { showClassicTools = false },
+                    label = { Text("ReAct Agent & Meal Vision") },
+                )
+                FilterChip(
+                    selected = showClassicTools,
+                    onClick = { showClassicTools = true },
+                    label = { Text("Fruit Guide & Tips") },
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (!showClassicTools) {
+                NutriCoachAgentSection(
+                    uiState = agentUiState,
+                    onSendPrompt = agentViewModel::sendMessage,
+                    onConfirmWrite = agentViewModel::confirmPendingMealWrite,
+                    onDismissWrite = agentViewModel::dismissPendingMealWrite,
+                    onLaunchMealCamera = onMealPlateCameraClick,
+                    onSimulateMealPlateVision = agentViewModel::analyzeSampleMealPlate,
+                    onCancelRun = agentViewModel::cancelActiveRun,
+                    onClearHistory = agentViewModel::clearHistory,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            } else if (isLandscape) {
+                LandscapeNutriCoachLayout(
+                    innerPadding = PaddingValues(0.dp),
+                    fruitUiState = fruitUiState,
+                    needsImprove = needsImprovement,
+                    aiResult = aiResult,
+                    genAiViewModel = genAiViewModel,
+                    userId = userId,
+                    localQuery = localQuery,
+                    onQueryChange = { localQuery = it },
+                    fruitCardExpanded = fruitCardExpanded,
+                    onExpandedChange = { fruitCardExpanded = it },
+                    focusRequester = focusRequester,
+                    focusManager = focusManager,
+                    viewModel = viewModel,
+                    defaultPrompt = defaultPrompt,
+                    suggestedPromptsShort = suggestedPromptsShort,
+                    suggestedPromptsFull = suggestedPromptsFull,
+                    onShowHistory = { showTipHistory = true },
+                    scrollState = rememberScrollState(),
+                    onCameraClick = onCameraClick
+                )
+            } else {
+                PortraitNutriCoachLayout(
+                    innerPadding = PaddingValues(0.dp),
+                    needsImprove = needsImprovement,
+                    fruitUiState = fruitUiState,
+                    aiResult = aiResult,
+                    genAiViewModel = genAiViewModel,
+                    userId = userId,
+                    localQuery = localQuery,
+                    onQueryChange = { localQuery = it },
+                    fruitCardExpanded = fruitCardExpanded,
+                    onExpandedChange = { fruitCardExpanded = it },
+                    focusRequester = focusRequester,
+                    focusManager = focusManager,
+                    viewModel = viewModel,
+                    defaultPrompt = defaultPrompt,
+                    suggestedPromptsShort = suggestedPromptsShort,
+                    suggestedPromptsFull = suggestedPromptsFull,
+                    onShowHistory = { showTipHistory = true },
+                    scrollState = rememberScrollState(),
+                    onCameraClick = onCameraClick
+                )
+            }
         }
     }
 }

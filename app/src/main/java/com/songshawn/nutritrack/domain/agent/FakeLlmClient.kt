@@ -117,17 +117,7 @@ class FakeLlmClient(
         const val TOOL_GET_USER_PREFERENCES = "get_user_preferences"
         const val TOOL_LOG_MEAL = "log_meal"
 
-        private val WRITE_KEYWORDS = listOf(
-            "log ",
-            "record ",
-            "add to breakfast",
-            "add to lunch",
-            "add to dinner",
-            "ate ",
-            "had for breakfast",
-            "had for lunch",
-            "had for dinner",
-        )
+        private val WRITE_ACTION_REGEX = Regex("""\b(log|record|ate)\b|add to (breakfast|lunch|dinner)|had for (breakfast|lunch|dinner)""")
         private val KNOWN_FRUITS = listOf(
             "banana",
             "apple",
@@ -141,9 +131,10 @@ class FakeLlmClient(
         private val FRUIT_CONTEXT_KEYWORDS = listOf("fruit", "sugar", "nutrition", "vitamin")
         private val TODAY_SUMMARY_KEYWORDS = listOf(
             "today",
-            "calorie",
-            "macro",
-            "protein",
+            "eaten",
+            "my calorie",
+            "my macro",
+            "protein intake",
             "eaten so far",
             "daily summary",
         )
@@ -191,7 +182,7 @@ class FakeLlmClient(
         }
 
         private fun matchWriteMealTool(lower: String): ToolCall? {
-            if (!lower.containsAny(WRITE_KEYWORDS)) return null
+            if (!WRITE_ACTION_REGEX.containsMatchIn(lower)) return null
             val mealType = when {
                 lower.contains("breakfast") -> "BREAKFAST"
                 lower.contains("dinner") -> "DINNER"

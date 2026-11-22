@@ -25,13 +25,13 @@ the others.
 
 ## Phase 2 — NutriCoach agent
 
-- [ ] `LlmClient` abstraction (chat, streaming, tool calling); Zhipu and fake implementations
-- [ ] Coroutine-based tool-calling loop with step limit, timeout, parallel tool calls and cancellation
-- [ ] User confirmation for write tools (e.g. "log a meal")
-- [ ] Meal photo → structured items (JSON) → confirmed meal
-- [ ] Conversation memory in Room with summarisation
-- [ ] Visible tool-call trace in the chat UI
-- [ ] Tool-selection evaluation set
+- [x] `LlmClient` abstraction (chat, streaming, tool calling); Zhipu and fake implementations
+- [x] Coroutine-based tool-calling loop with step limit, timeout, parallel tool calls and cancellation
+- [x] User confirmation for write tools (e.g. "log a meal")
+- [x] Meal photo → structured items (JSON) → confirmed meal
+- [x] Conversation memory in Room with summarisation
+- [x] Visible tool-call trace in the chat UI
+- [x] Tool-selection evaluation set
 - [ ] (Optional) on-device RAG over dietary guidelines with citations
 
 ## Phase 3 — Move the API key off the device

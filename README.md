@@ -14,7 +14,7 @@ Jetpack Compose, Hilt, Room, Retrofit and Firebase.
 | Onboarding | Questionnaire for food-category preferences, eating persona and meal/sleep timing |
 | Food Logging | Built-in food nutrition catalog (`assets/food_catalog.json`) with SQLite **FTS4** prefix search, relational meal slots (`@Relation`, `@Transaction`, foreign keys), and live recalculation of daily HEIFA-2013 scores via a pure-Kotlin scoring engine |
 | Home & Insights | Live HEIFA-2013 diet-quality score, per-category breakdown, and **7-day / 30-day trend sparkline chart** |
-| NutriCoach | Fruit nutrition lookup (Fruityvice) with a stale-while-revalidate Room cache; streaming AI tips over SSE; fruit recognition from a photo with a vision model |
+| NutriCoach ReAct Agent | Provider-agnostic `LlmClient` (Zhipu GLM-4 + deterministic `FakeLlmClient`), coroutine **ReAct tool-calling loop** with parallel `async`/`awaitAll` read tools, user-confirmation gate for write tools (`log_meal`), **meal-plate photo → structured JSON → confirmed meal log**, persistent Room conversation memory with auto-compaction summaries, expandable tool-call trace UI, and a 12-case tool-selection evaluation suite |
 | Cloud sync | Questionnaire answers and saved tips are mirrored to Firestore per user, guarded by [security rules](firestore.rules) |
 | Clinician | SQL aggregate (`GROUP BY` / `AVG`) cohort statistics plus AI-generated pattern analysis |
 
