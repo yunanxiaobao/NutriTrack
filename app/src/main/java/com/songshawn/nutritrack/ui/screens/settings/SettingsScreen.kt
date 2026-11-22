@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import com.songshawn.nutritrack.R
 import com.songshawn.nutritrack.navigation.Routes
 import com.songshawn.nutritrack.ui.components.BottomNavigationBar
+import com.songshawn.nutritrack.util.DemoDataConfig
 import com.songshawn.nutritrack.viewmodel.SettingsViewModel
 
 /**
@@ -112,11 +113,13 @@ private fun SettingsItemsList(navController: NavController) {
         onClick = { navController.navigate(Routes.ABOUT) }
     )
 
-    SettingItem(
-        title = "Admin View",
-        icon = Icons.Outlined.AccountBox,
-        onClick = { navController.navigate(Routes.ADMIN_LOGIN) }
-    )
+    if (DemoDataConfig.isEnabled) {
+        SettingItem(
+            title = "Clinician Dashboard (Demo Cohort)",
+            icon = Icons.Outlined.AccountBox,
+            onClick = { navController.navigate(Routes.CLINICIAN) }
+        )
+    }
 }
 
 /**

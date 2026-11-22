@@ -10,6 +10,7 @@ import com.songshawn.nutritrack.data.network.genai.ImageUrl
 import com.songshawn.nutritrack.data.network.genai.OpenAIMessage
 import com.songshawn.nutritrack.data.network.genai.OpenAIRequest
 import com.songshawn.nutritrack.data.network.genai.OpenAIStreamResponse
+import com.songshawn.nutritrack.util.AuthenticationManager
 import com.songshawn.nutritrack.util.DemoDataConfig
 import com.songshawn.nutritrack.viewmodel.ApiResult
 import kotlinx.coroutines.CancellationException
@@ -31,22 +32,25 @@ class GenAIRepository @Inject constructor(
     private val apiService: GenAIApiService,
 ) {
     private val gson = Gson()
-    private val apiKey: String get() = BuildConfig.ZHIPU_API_KEY
-    private val authHeader: String get() = "Bearer $apiKey"
-    private val useDemoOfflineLlm: Boolean get() = DemoDataConfig.isEnabled && apiKey.isBlank()
 
     /** Single-shot text completion. */
     suspend fun generateText(prompt: String): ApiResult<String> = withContext(Dispatchers.IO) {
-        if (useDemoOfflineLlm) {
-            delay(180L)
-            return@withContext ApiResult.Success(buildDemoCoachingResponse(prompt))
+        val bearer = AuthenticationManager.resolveLlmBearerHeader()
+        if (bearer == null) {
+            if (DemoDataConfig.isEnabled) {
+                delay(180L)
+                return@withContext ApiResult.Success(buildDemoCoachingResponse(prompt))
+            }
+            return@withContext ApiResult.Error.Unknown(
+                IllegalStateException("No Firebase ID token or LLM proxy configured"),
+            )
         }
         runCatchingApi {
             val request = OpenAIRequest(
                 model = TEXT_MODEL,
                 messages = listOf(OpenAIMessage(role = "user", content = prompt)),
             )
-            val resp = apiService.generateContent(request, authHeader)
+            val resp = apiService.generateContent(request, bearer)
             if (!resp.isSuccessful) {
                 return@runCatchingApi ApiResult.Error.Http(
                     code = resp.code(),
@@ -66,14 +70,18 @@ class GenAIRepository @Inject constructor(
      * Streams a text completion via Server-Sent Events (or simulated chunks in offline demo mode).
      */
     fun streamText(prompt: String): Flow<StreamResult> = flow {
-        if (useDemoOfflineLlm) {
-            val fullText = buildDemoCoachingResponse(prompt)
-            val words = fullText.split(" ")
-            for (word in words) {
-                delay(20L)
-                emit(StreamResult.Chunk("$word "))
+        val bearer = AuthenticationManager.resolveLlmBearerHeader()
+        if (bearer == null) {
+            if (DemoDataConfig.isEnabled) {
+                val fullText = buildDemoCoachingResponse(prompt)
+                for (word in fullText.split(" ")) {
+                    delay(20L)
+                    emit(StreamResult.Chunk("$word "))
+                }
+                emit(StreamResult.Complete)
+            } else {
+                emit(StreamResult.Error("No Firebase ID token or LLM proxy configured"))
             }
-            emit(StreamResult.Complete)
             return@flow
         }
 
@@ -83,7 +91,7 @@ class GenAIRepository @Inject constructor(
                 messages = listOf(OpenAIMessage(role = "user", content = prompt)),
                 stream = true,
             )
-            val response = apiService.generateContentStream(request, authHeader)
+            val response = apiService.generateContentStream(request, bearer)
             if (!response.isSuccessful) {
                 emit(StreamResult.Error("HTTP ${response.code()}: ${response.errorBody()?.string()}"))
                 return@flow
@@ -125,9 +133,15 @@ class GenAIRepository @Inject constructor(
 
     /** Asks the vision model to name the fruit in [bitmap]. */
     suspend fun identifyFruitFromImage(bitmap: Bitmap): ApiResult<String> = withContext(Dispatchers.IO) {
-        if (useDemoOfflineLlm) {
-            delay(200L)
-            return@withContext ApiResult.Success("Banana")
+        val bearer = AuthenticationManager.resolveLlmBearerHeader()
+        if (bearer == null) {
+            if (DemoDataConfig.isEnabled) {
+                delay(200L)
+                return@withContext ApiResult.Success("Banana")
+            }
+            return@withContext ApiResult.Error.Unknown(
+                IllegalStateException("No Firebase ID token or LLM proxy configured"),
+            )
         }
         runCatchingApi {
             val contentParts = listOf(
@@ -138,7 +152,7 @@ class GenAIRepository @Inject constructor(
                 model = VISION_MODEL,
                 messages = listOf(OpenAIMessage(role = "user", content = contentParts)),
             )
-            val resp = apiService.generateContent(request, authHeader)
+            val resp = apiService.generateContent(request, bearer)
             if (!resp.isSuccessful) {
                 return@runCatchingApi ApiResult.Error.Http(
                     code = resp.code(),

@@ -21,8 +21,14 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
+    private const val DIRECT_ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
     private const val FRUITYVICE_BASE_URL = "https://www.fruityvice.com/"
+
+    private fun resolveLlmBaseUrl(): String {
+        val proxyUrl = BuildConfig.LLM_PROXY_BASE_URL.trim()
+        if (proxyUrl.isEmpty()) return DIRECT_ZHIPU_BASE_URL
+        return if (proxyUrl.endsWith("/")) proxyUrl else "$proxyUrl/"
+    }
 
     @Provides
     @Singleton
@@ -52,7 +58,7 @@ object NetworkModule {
     @Named("ZhipuRetrofit")
     fun provideZhipuRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit = Retrofit.Builder()
         .client(okHttpClient)
-        .baseUrl(ZHIPU_BASE_URL)
+        .baseUrl(resolveLlmBaseUrl())
         .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 

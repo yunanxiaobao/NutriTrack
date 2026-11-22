@@ -2,6 +2,9 @@ package com.songshawn.nutritrack.util
 
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
+import com.songshawn.nutritrack.BuildConfig
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.tasks.await
 
 /**
  * Session facade backed by Firebase Authentication, with an automatic fallback
@@ -49,6 +52,32 @@ object AuthenticationManager {
         } else {
             null
         }
+    }
+
+    /**
+     * Resolves the `Authorization` Bearer token for LLM calls:
+     * 1. When [BuildConfig.LLM_PROXY_BASE_URL] is configured (production architecture), fetches the
+     *    signed-in user's short-lived Firebase ID token (`RS256` JWT verified by the Cloudflare Worker).
+     * 2. In local debug builds where a direct debug key is provided in `local.properties`, falls back
+     *    to [BuildConfig.ZHIPU_API_KEY]. Release builds never bundle an API key.
+     */
+    suspend fun resolveLlmBearerHeader(): String? {
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        if (BuildConfig.LLM_PROXY_BASE_URL.isNotBlank() && firebaseUser != null) {
+            val idToken = try {
+                firebaseUser.getIdToken(false).await()?.token
+            } catch (ce: CancellationException) {
+                throw ce
+            } catch (_: Exception) {
+                null
+            }
+            if (!idToken.isNullOrBlank()) {
+                return "Bearer $idToken"
+            }
+        }
+        return BuildConfig.ZHIPU_API_KEY
+            .takeIf { it.isNotBlank() }
+            ?.let { "Bearer $it" }
     }
 
     fun logout(context: Context) {

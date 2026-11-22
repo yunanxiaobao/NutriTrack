@@ -16,8 +16,16 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-/** Reads the Zhipu key from local.properties (`zhipu.apiKey`, legacy `apikey`) or the env. */
-fun zhipuApiKey(): String {
+/** Reads the Cloudflare Worker LLM proxy URL from local.properties (`llm.proxyUrl`) or env. */
+fun llmProxyBaseUrl(): String {
+    val raw = localProperties.getProperty("llm.proxyUrl")
+        ?: System.getenv("LLM_PROXY_URL")
+        ?: ""
+    return raw.trim().removeSurrounding("\"")
+}
+
+/** Reads an optional debug-only Zhipu key from local.properties (`zhipu.apiKey`). Never included in release builds. */
+fun debugZhipuApiKey(): String {
     val raw = localProperties.getProperty("zhipu.apiKey")
         ?: localProperties.getProperty("apikey")
         ?: System.getenv("ZHIPU_API_KEY")
@@ -38,9 +46,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // TEMPORARY: the key is still compiled into the APK. It will be removed once
-        // requests go through the server-side proxy (see docs/roadmap.md, phase 3).
-        buildConfigField("String", "ZHIPU_API_KEY", "\"${zhipuApiKey()}\"")
+        buildConfigField("String", "LLM_PROXY_BASE_URL", "\"${llmProxyBaseUrl()}\"")
+        buildConfigField("String", "ZHIPU_API_KEY", "\"\"")
     }
 
     flavorDimensions += "mode"
@@ -57,8 +64,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ZHIPU_API_KEY", "\"${debugZhipuApiKey()}\"")
+        }
         release {
-            isMinifyEnabled = false
+            // Release builds strip all client-side API keys and enable R8 code shrinking & obfuscation.
+            buildConfigField("String", "ZHIPU_API_KEY", "\"\"")
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

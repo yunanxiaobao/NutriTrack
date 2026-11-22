@@ -1,6 +1,5 @@
 package com.songshawn.nutritrack.util
 
-
 object Constants {
     const val SHARED_PREFS_NAME = "NutriTrack_Preferences"
     const val DATABASE_NAME = "nutritrack_database"
@@ -9,6 +8,4 @@ object Constants {
     const val KEY_CSV_IMPORTED = "csv_imported"
     const val DATASET_NAME = "data.csv"
     const val KEY_DATA_INITIALIZED = "is_data_initialized"
-    const val KEY_ADMIN_PASSWORD = "admin_password"
-    const val DEFAULT_ADMIN_PASSWORD = "dollar-entry-apples"
 }

@@ -57,17 +57,17 @@ cd NutriTrack
 ./gradlew testProdDebugUnitTest    # unit tests (HEIFA scoring engine, CSV, FTS query builder)
 ```
 
-AI features need a Zhipu API key. Add it to `local.properties` (never commit this file):
+AI features authenticate through the included Cloudflare Worker proxy ([`proxy-worker/`](proxy-worker/README.md)) using the signed-in user's **Firebase Authentication ID Token (RS256 JWT)**, so release APKs never embed a client-side LLM API key:
 
 ```properties
-zhipu.apiKey=your-key-here
+# Recommended: route through the Cloudflare Worker proxy
+llm.proxyUrl=https://nutritrack-llm-proxy.<your-subdomain>.workers.dev/
+
+# Optional (local debug builds only; stripped from release builds):
+zhipu.apiKey=your-debug-key-here
 ```
 
-The app builds and runs without a key; only the AI calls will fail.
-
-> [!WARNING]
-> The key is currently compiled into the APK, so do not distribute builds that contain a
-> real key. Moving the key behind a server-side proxy is planned (roadmap phase 3).
+The `demo` flavor (`./gradlew assembleDemoDebug`) runs completely offline without any key or proxy using its seeded 30-day dataset and `FakeLlmClient`.
 
 ## Provenance
 

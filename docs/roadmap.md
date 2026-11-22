@@ -36,9 +36,9 @@ the others.
 
 ## Phase 3 — Move the API key off the device
 
-- [ ] Cloudflare Worker proxy: verifies Firebase ID tokens, per-user rate limiting, SSE pass-through
-- [ ] App sends only the Firebase ID token; R8 enabled for release
-- [ ] Replace the hard-coded clinician password (custom claims or demo-flavor only)
+- [x] Cloudflare Worker proxy: verifies Firebase ID tokens, per-user rate limiting, SSE pass-through
+- [x] App sends only the Firebase ID token; R8 enabled for release
+- [x] Replace the hard-coded clinician password (custom claims or demo-flavor only)
 
 ## Phase 4 — Concurrency, background work, offline
 

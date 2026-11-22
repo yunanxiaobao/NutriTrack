@@ -16,6 +16,7 @@ import com.songshawn.nutritrack.data.network.genai.OpenAIToolCall
 import com.songshawn.nutritrack.data.network.genai.OpenAIToolDefinition
 import com.songshawn.nutritrack.data.repository.MealLoggingRepository
 import com.songshawn.nutritrack.data.repository.StreamResult
+import com.songshawn.nutritrack.util.AuthenticationManager
 import com.songshawn.nutritrack.util.DemoDataConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -42,17 +43,13 @@ class ZhipuLlmClient @Inject constructor(
 ) : LlmClient {
 
     private val fallbackFake = FakeLlmClient(simulatedDelayMs = 60L)
-    private val apiKey: String get() = BuildConfig.ZHIPU_API_KEY
-    private val authHeader: String get() = "Bearer $apiKey"
-    private val useOfflineFallback: Boolean get() = apiKey.isBlank()
 
     override suspend fun chatWithTools(
         messages: List<LlmMessage>,
         tools: List<ToolDefinition>,
     ): LlmTurnResult = withContext(Dispatchers.IO) {
-        if (useOfflineFallback) {
-            return@withContext fallbackFake.chatWithTools(messages, tools)
-        }
+        val bearer = AuthenticationManager.resolveLlmBearerHeader()
+            ?: return@withContext fallbackFake.chatWithTools(messages, tools)
 
         val wireMessages = messages.map { it.toWireMessage() }
         val wireTools = tools.takeIf { it.isNotEmpty() }?.map { tool ->
@@ -73,7 +70,7 @@ class ZhipuLlmClient @Inject constructor(
             toolChoice = if (wireTools != null) "auto" else null,
         )
 
-        val response = apiService.generateContent(request, authHeader)
+        val response = apiService.generateContent(request, bearer)
         if (!response.isSuccessful) {
             if (DemoDataConfig.isEnabled) {
                 return@withContext fallbackFake.chatWithTools(messages, tools)
@@ -103,7 +100,8 @@ class ZhipuLlmClient @Inject constructor(
     }
 
     override fun streamChat(messages: List<LlmMessage>): Flow<StreamResult> = flow {
-        if (useOfflineFallback) {
+        val bearer = AuthenticationManager.resolveLlmBearerHeader()
+        if (bearer == null) {
             fallbackFake.streamChat(messages).collect { emit(it) }
             return@flow
         }
@@ -114,7 +112,7 @@ class ZhipuLlmClient @Inject constructor(
                 messages = messages.map { it.toWireMessage() },
                 stream = true,
             )
-            val response = apiService.generateContentStream(request, authHeader)
+            val response = apiService.generateContentStream(request, bearer)
             if (!response.isSuccessful) {
                 emit(StreamResult.Error("HTTP ${response.code()}: ${response.errorBody()?.string()}"))
                 return@flow
@@ -149,9 +147,8 @@ class ZhipuLlmClient @Inject constructor(
     override suspend fun extractMealFromBase64Jpeg(base64Jpeg: String): DetectedMealPlate =
         withContext(Dispatchers.IO) {
             mealLoggingRepository.ensureCatalogSeeded()
-            if (useOfflineFallback) {
-                return@withContext fallbackFake.extractMealFromBase64Jpeg(base64Jpeg)
-            }
+            val bearer = AuthenticationManager.resolveLlmBearerHeader()
+                ?: return@withContext fallbackFake.extractMealFromBase64Jpeg(base64Jpeg)
 
             val contentParts = listOf(
                 ContentPart(type = "image_url", imageUrl = ImageUrl(url = "data:image/jpeg;base64,$base64Jpeg")),
@@ -161,7 +158,7 @@ class ZhipuLlmClient @Inject constructor(
                 model = VISION_MODEL,
                 messages = listOf(OpenAIMessage(role = "user", content = contentParts)),
             )
-            val resp = apiService.generateContent(request, authHeader)
+            val resp = apiService.generateContent(request, bearer)
             val rawText = resp.body()?.choices?.firstOrNull()?.message?.content.orEmpty()
             if (!resp.isSuccessful || rawText.isBlank()) {
                 return@withContext fallbackFake.extractMealFromBase64Jpeg(base64Jpeg)
