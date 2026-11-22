@@ -37,12 +37,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.songshawn.nutritrack.R
 import com.songshawn.nutritrack.data.models.InsightsScreenScoreCategory
+import com.songshawn.nutritrack.data.room.dao.DailyScoreAggregate
+import com.songshawn.nutritrack.data.room.entity.DailyScoreEntity
 import com.songshawn.nutritrack.data.room.entity.PatientEntity
 import com.songshawn.nutritrack.data.room.entity.toScoreList
 import com.songshawn.nutritrack.navigation.Routes
 import com.songshawn.nutritrack.theme.LightGrey
 import com.songshawn.nutritrack.theme.MediumGreen
 import com.songshawn.nutritrack.ui.components.BottomNavigationBar
+import com.songshawn.nutritrack.ui.components.ScoreTrendCard
 import com.songshawn.nutritrack.util.getScoreColor
 import com.songshawn.nutritrack.viewmodel.InsightsViewModel
 import kotlin.math.roundToInt
@@ -63,6 +66,13 @@ fun InsightsScreen(
 ) {
     val context = LocalContext.current
     val patient by viewModel.getPatient(userId).collectAsState(initial = null)
+    var trendWindowDays by remember { mutableIntStateOf(7) }
+    val trendPoints by remember(userId, trendWindowDays) {
+        viewModel.getRecentDailyScores(userId, trendWindowDays)
+    }.collectAsState(initial = emptyList())
+    val trendAggregate by remember(userId, trendWindowDays) {
+        viewModel.getRecentScoreAggregate(userId, trendWindowDays)
+    }.collectAsState(initial = null)
 
     // Check current screen orientation
     val configuration = LocalConfiguration.current
@@ -94,12 +104,18 @@ fun InsightsScreen(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Your dietary-quality scores will appear here once meal " +
-                        "logging is available for personal accounts. Your questionnaire " +
-                        "answers already personalise NutriCoach - try asking it for a tip.",
+                    text = "Log a meal in the food log to compute your daily HEIFA-2013 " +
+                        "nutrition score and 7/30-day trends.",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { navController.navigate(Routes.MEAL_LOG) },
+                    colors = ButtonDefaults.buttonColors(containerColor = MediumGreen),
+                ) {
+                    Text("Log a Meal Now", color = Color.White)
+                }
             }
         } else if (isLandscape) {
             LandscapeInsightsLayout(
@@ -107,7 +123,11 @@ fun InsightsScreen(
                 patient = patient,
                 context = context,
                 userId = userId,
-                navController = navController
+                navController = navController,
+                selectedWindowDays = trendWindowDays,
+                onSelectWindowDays = { trendWindowDays = it },
+                trendPoints = trendPoints,
+                trendAggregate = trendAggregate,
             )
         } else {
             PortraitInsightsLayout(
@@ -115,7 +135,11 @@ fun InsightsScreen(
                 patient = patient,
                 context = context,
                 userId = userId,
-                navController = navController
+                navController = navController,
+                selectedWindowDays = trendWindowDays,
+                onSelectWindowDays = { trendWindowDays = it },
+                trendPoints = trendPoints,
+                trendAggregate = trendAggregate,
             )
         }
     }
@@ -130,7 +154,11 @@ private fun PortraitInsightsLayout(
     patient: PatientEntity?,
     context: Context,
     userId: String,
-    navController: NavController
+    navController: NavController,
+    selectedWindowDays: Int,
+    onSelectWindowDays: (Int) -> Unit,
+    trendPoints: List<DailyScoreEntity>,
+    trendAggregate: DailyScoreAggregate?,
 ) {
     Column(
         Modifier
@@ -141,6 +169,14 @@ private fun PortraitInsightsLayout(
     ) {
         InsightsHeaderSection()
         Spacer(Modifier.height(16.dp))
+
+        ScoreTrendCard(
+            selectedWindowDays = selectedWindowDays,
+            onSelectWindowDays = onSelectWindowDays,
+            trendPoints = trendPoints,
+            aggregate = trendAggregate,
+        )
+        Spacer(Modifier.height(20.dp))
 
         Text(
             text = stringResource(R.string.insightsScreen_totalScoreTitle),
@@ -177,7 +213,11 @@ private fun LandscapeInsightsLayout(
     patient: PatientEntity?,
     context: Context,
     userId: String,
-    navController: NavController
+    navController: NavController,
+    selectedWindowDays: Int,
+    onSelectWindowDays: (Int) -> Unit,
+    trendPoints: List<DailyScoreEntity>,
+    trendAggregate: DailyScoreAggregate?,
 ) {
     Row(
         modifier = Modifier
@@ -220,13 +260,20 @@ private fun LandscapeInsightsLayout(
             )
         }
 
-        // Right side: Detailed scores breakdown
+        // Right side: Trend chart + Detailed scores breakdown
         Column(
             modifier = Modifier
                 .weight(0.6f)
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
         ) {
+            ScoreTrendCard(
+                selectedWindowDays = selectedWindowDays,
+                onSelectWindowDays = onSelectWindowDays,
+                trendPoints = trendPoints,
+                aggregate = trendAggregate,
+            )
+            Spacer(Modifier.height(16.dp))
             CollapsibleScoresCard(
                 scores = patient?.toScoreList().orEmpty(),
                 isLandscape = true

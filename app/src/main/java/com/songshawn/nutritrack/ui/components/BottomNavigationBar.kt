@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Search
@@ -38,6 +39,7 @@ fun BottomNavigationBar(
     // Define navigation items
     val navigationItems = listOf(
         NavigationItem("Home", Routes.HOME_GRAPH, Icons.Outlined.Home),
+        NavigationItem("Log Meal", Routes.MEAL_LOG, Icons.Outlined.AddCircle),
         NavigationItem("Insights", Routes.INSIGHTS, Icons.Outlined.Search),
         NavigationItem("NutriCoach", Routes.NUTRICOACH, Icons.Outlined.Face),
         NavigationItem("Settings", Routes.SETTINGS, Icons.Outlined.Settings)

@@ -92,17 +92,15 @@ class ClinicianViewModel @Inject constructor(
                 // Update registered user count
                 _registeredUserCount.value = repository.getRegisteredCount()
 
-                // Filter male and female users
-                val malePatients = allPatients.filter { it.sex == Gender.MALE }
-                val femalePatients = allPatients.filter { it.sex == Gender.FEMALE }
+                // Compute gender counts and averages directly in SQLite (GROUP BY + AVG)
+                val genderSummaries = repository.getGenderScoreSummaries().associateBy { it.sex }
+                val maleSummary = genderSummaries[Gender.MALE]
+                val femaleSummary = genderSummaries[Gender.FEMALE]
 
-                // Update counts
-                _maleCount.value = malePatients.size
-                _femaleCount.value = femalePatients.size
-
-                // Calculate average scores
-                _maleAverageScore.value = calculateAverageScore(malePatients)
-                _femaleAverageScore.value = calculateAverageScore(femalePatients)
+                _maleCount.value = maleSummary?.patientCount ?: 0
+                _femaleCount.value = femaleSummary?.patientCount ?: 0
+                _maleAverageScore.value = maleSummary?.avgTotalScore ?: 0.0
+                _femaleAverageScore.value = femaleSummary?.avgTotalScore ?: 0.0
             } catch (e: Exception) {
                 // Handle errors
                 _maleAverageScore.value = 0.0
@@ -115,17 +113,6 @@ class ClinicianViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
-    }
-
-    /**
-     * Calculates the average HEIFA score for a list of patients.
-     *
-     * @param patients List of patients
-     * @return Average HEIFA score or 0.0 if list is empty
-     */
-    private fun calculateAverageScore(patients: List<PatientEntity>): Double {
-        if (patients.isEmpty()) return 0.0
-        return patients.map { it.heifaTotalScore }.average()
     }
 
     /**

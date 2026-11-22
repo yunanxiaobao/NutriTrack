@@ -126,6 +126,19 @@ fun NutriTrackNavHost() {
             HomeScreen(userId, navController)
         }
 
+        composable(Routes.MEAL_LOG) {
+            val userId = AuthenticationManager.getCurrentUserId()
+
+            if (userId == null) {
+                navController.navigate(Routes.LOGIN) {
+                    launchSingleTop = true
+                }
+                return@composable
+            }
+
+            MealLogScreen(userId, navController)
+        }
+
         composable(Routes.INSIGHTS) {
             val userId = AuthenticationManager.getCurrentUserId()
 

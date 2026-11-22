@@ -6,6 +6,7 @@ object Routes {
     const val REGISTER       = "register"
     const val QUESTIONNAIRE  = "questionnaire"
     const val HOME_GRAPH     = "home"
+    const val MEAL_LOG       = "meal_log"
     const val INSIGHTS       = "insights"
     const val NUTRICOACH     = "nutricoach"
     const val SETTINGS       = "settings"

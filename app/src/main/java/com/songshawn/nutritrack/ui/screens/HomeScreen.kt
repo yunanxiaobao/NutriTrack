@@ -129,7 +129,17 @@ private fun PortraitHomeLayout(
         if (hasScores) {
             ScoreSection(score = totalScore, navController = navController)
         } else {
-            NoScoresGuidanceCard()
+            NoScoresGuidanceCard(onLogMealClick = { navController.navigate(Routes.MEAL_LOG) })
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(
+            onClick = { navController.navigate(Routes.MEAL_LOG) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MediumGreen),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Text("Log Today's Meals", color = Color.White, fontWeight = FontWeight.Bold)
         }
 
         HorizontalDivider(
@@ -181,7 +191,7 @@ private fun LandscapeHomeLayout(
             if (hasScores) {
                 ScoreSection(score = totalScore, navController = navController, isLandscape = true)
             } else {
-                NoScoresGuidanceCard()
+                NoScoresGuidanceCard(onLogMealClick = { navController.navigate(Routes.MEAL_LOG) })
             }
         }
 
@@ -439,25 +449,31 @@ private fun QuickTips() {
  * data in a later release; until then the app is honest about the gap.
  */
 @Composable
-private fun NoScoresGuidanceCard() {
+private fun NoScoresGuidanceCard(onLogMealClick: () -> Unit = {}) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Your personal scores are on the way",
+                text = "Log a meal to compute your HEIFA score",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "NutriTrack now works with your own account and data. " +
-                    "Personal nutrition scores will appear here as meal logging rolls out. " +
-                    "Meanwhile, explore the fruit guide and ask NutriCoach for advice " +
-                    "tailored to your questionnaire answers.",
+                text = "Your personal dietary-quality score is calculated directly from " +
+                    "the meals you log. Search the built-in food catalog to log breakfast, " +
+                    "lunch, dinner, or snacks.",
                 style = MaterialTheme.typography.bodyMedium
             )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onLogMealClick,
+                colors = ButtonDefaults.buttonColors(containerColor = MediumGreen),
+            ) {
+                Text("Log Your First Meal", color = Color.White)
+            }
         }
     }
 }
