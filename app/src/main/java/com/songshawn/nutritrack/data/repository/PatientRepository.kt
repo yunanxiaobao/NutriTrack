@@ -1,5 +1,6 @@
 package com.songshawn.nutritrack.data.repository
 
+import com.songshawn.nutritrack.data.room.dao.GenderScoreSummary
 import com.songshawn.nutritrack.data.room.dao.PatientDao
 import com.songshawn.nutritrack.data.room.entity.PatientEntity
 import kotlinx.coroutines.flow.Flow
@@ -48,4 +49,8 @@ class PatientRepository @Inject constructor(private val dao: PatientDao) {
     // Get count of registered users
     suspend fun getRegisteredCount(): Int =
         dao.getRegisteredCount()
+
+    // SQL GROUP BY / AVG summary by gender
+    suspend fun getGenderScoreSummaries(): List<GenderScoreSummary> =
+        dao.getGenderScoreSummaries()
 }

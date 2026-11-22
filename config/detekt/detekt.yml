@@ -18,6 +18,8 @@ complexity:
   LargeClass:
     threshold: 600
   TooManyFunctions:
+    thresholdInClasses: 20
+    thresholdInObjects: 20
     ignoreAnnotated: ['Dao', 'Module']
 
 naming:

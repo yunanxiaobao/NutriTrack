@@ -1,0 +1,806 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 7,
+    "identityHash": "740c5c5b8e8379c43e1797b92f7c8f4b",
+    "entities": [
+      {
+        "tableName": "patient",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `name` TEXT NOT NULL, `passwordHash` TEXT NOT NULL, `sex` TEXT, `heifaTotalScore` REAL NOT NULL, `vegetableScore` REAL NOT NULL, `fruitScore` REAL NOT NULL, `grainsScore` REAL NOT NULL, `wholegrainsScore` REAL NOT NULL, `meatAndAlternativeScore` REAL NOT NULL, `dairyScore` REAL NOT NULL, `waterScore` REAL NOT NULL, `saturatedFatScore` REAL NOT NULL, `unsaturatedFatScore` REAL NOT NULL, `sodiumScore` REAL NOT NULL, `sugarScore` REAL NOT NULL, `alcoholScore` REAL NOT NULL, `discretionaryScore` REAL NOT NULL, `vegetablesVariantionsScore` REAL NOT NULL, `fruitVariantionsScore` REAL NOT NULL, `fruitServeSize` REAL NOT NULL, PRIMARY KEY(`userId`))",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phoneNumber",
+            "columnName": "phoneNumber",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "passwordHash",
+            "columnName": "passwordHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sex",
+            "columnName": "sex",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "heifaTotalScore",
+            "columnName": "heifaTotalScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vegetableScore",
+            "columnName": "vegetableScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fruitScore",
+            "columnName": "fruitScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "grainsScore",
+            "columnName": "grainsScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wholegrainsScore",
+            "columnName": "wholegrainsScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meatAndAlternativeScore",
+            "columnName": "meatAndAlternativeScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dairyScore",
+            "columnName": "dairyScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "waterScore",
+            "columnName": "waterScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "saturatedFatScore",
+            "columnName": "saturatedFatScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unsaturatedFatScore",
+            "columnName": "unsaturatedFatScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sodiumScore",
+            "columnName": "sodiumScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sugarScore",
+            "columnName": "sugarScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alcoholScore",
+            "columnName": "alcoholScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "discretionaryScore",
+            "columnName": "discretionaryScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vegetablesVariantionsScore",
+            "columnName": "vegetablesVariantionsScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fruitVariantionsScore",
+            "columnName": "fruitVariantionsScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fruitServeSize",
+            "columnName": "fruitServeSize",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "userId"
+          ]
+        }
+      },
+      {
+        "tableName": "food_intake",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`patientId` TEXT NOT NULL, `biggestMealTime` TEXT NOT NULL, `sleepTime` TEXT NOT NULL, `wakeTime` TEXT NOT NULL, `persona` TEXT NOT NULL, `selectedCategories` TEXT NOT NULL, PRIMARY KEY(`patientId`))",
+        "fields": [
+          {
+            "fieldPath": "patientId",
+            "columnName": "patientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "biggestMealTime",
+            "columnName": "biggestMealTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sleepTime",
+            "columnName": "sleepTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wakeTime",
+            "columnName": "wakeTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "persona",
+            "columnName": "persona",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectedCategories",
+            "columnName": "selectedCategories",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "patientId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_food_intake_patientId",
+            "unique": false,
+            "columnNames": [
+              "patientId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_food_intake_patientId` ON `${TABLE_NAME}` (`patientId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "nutricoach_tips",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `userId` TEXT NOT NULL, `tipContent` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `prompt` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipContent",
+            "columnName": "tipContent",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "prompt",
+            "columnName": "prompt",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "fruit_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `family` TEXT NOT NULL, `order` TEXT NOT NULL, `genus` TEXT NOT NULL, `carbohydrates` REAL NOT NULL, `protein` REAL NOT NULL, `fat` REAL NOT NULL, `calories` REAL NOT NULL, `sugar` REAL NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`name`))",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "family",
+            "columnName": "family",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "order",
+            "columnName": "order",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "genus",
+            "columnName": "genus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "carbohydrates",
+            "columnName": "carbohydrates",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "protein",
+            "columnName": "protein",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fat",
+            "columnName": "fat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "calories",
+            "columnName": "calories",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sugar",
+            "columnName": "sugar",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "name"
+          ]
+        }
+      },
+      {
+        "tableName": "food_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `category` TEXT NOT NULL, `subCategory` TEXT NOT NULL, `servingSizeDesc` TEXT NOT NULL, `servingGrams` REAL NOT NULL, `caloriesKcal` REAL NOT NULL, `proteinG` REAL NOT NULL, `fatG` REAL NOT NULL, `saturatedFatG` REAL NOT NULL, `unsaturatedFatG` REAL NOT NULL, `carbsG` REAL NOT NULL, `sugarG` REAL NOT NULL, `addedSugarG` REAL NOT NULL, `fiberG` REAL NOT NULL, `sodiumMg` REAL NOT NULL, `waterMl` REAL NOT NULL, `alcoholStandardDrinks` REAL NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subCategory",
+            "columnName": "subCategory",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "servingSizeDesc",
+            "columnName": "servingSizeDesc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "servingGrams",
+            "columnName": "servingGrams",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "caloriesKcal",
+            "columnName": "caloriesKcal",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "proteinG",
+            "columnName": "proteinG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fatG",
+            "columnName": "fatG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "saturatedFatG",
+            "columnName": "saturatedFatG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unsaturatedFatG",
+            "columnName": "unsaturatedFatG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "carbsG",
+            "columnName": "carbsG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sugarG",
+            "columnName": "sugarG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedSugarG",
+            "columnName": "addedSugarG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fiberG",
+            "columnName": "fiberG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sodiumMg",
+            "columnName": "sodiumMg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "waterMl",
+            "columnName": "waterMl",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alcoholStandardDrinks",
+            "columnName": "alcoholStandardDrinks",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_food_items_category",
+            "unique": false,
+            "columnNames": [
+              "category"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_food_items_category` ON `${TABLE_NAME}` (`category`)"
+          }
+        ]
+      },
+      {
+        "tableName": "food_items_fts",
+        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS4(`name` TEXT NOT NULL, `subCategory` TEXT NOT NULL, `servingSizeDesc` TEXT NOT NULL, content=`food_items`)",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subCategory",
+            "columnName": "subCategory",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "servingSizeDesc",
+            "columnName": "servingSizeDesc",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": []
+        },
+        "ftsVersion": "FTS4",
+        "ftsOptions": {
+          "tokenizer": "simple",
+          "tokenizerArgs": [],
+          "contentTable": "food_items",
+          "languageIdColumnName": "",
+          "matchInfo": "FTS4",
+          "notIndexedColumns": [],
+          "prefixSizes": [],
+          "preferredOrder": "ASC"
+        },
+        "contentSyncTriggers": [
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_food_items_fts_BEFORE_UPDATE BEFORE UPDATE ON `food_items` BEGIN DELETE FROM `food_items_fts` WHERE `docid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_food_items_fts_BEFORE_DELETE BEFORE DELETE ON `food_items` BEGIN DELETE FROM `food_items_fts` WHERE `docid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_food_items_fts_AFTER_UPDATE AFTER UPDATE ON `food_items` BEGIN INSERT INTO `food_items_fts`(`docid`, `name`, `subCategory`, `servingSizeDesc`) VALUES (NEW.`rowid`, NEW.`name`, NEW.`subCategory`, NEW.`servingSizeDesc`); END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_food_items_fts_AFTER_INSERT AFTER INSERT ON `food_items` BEGIN INSERT INTO `food_items_fts`(`docid`, `name`, `subCategory`, `servingSizeDesc`) VALUES (NEW.`rowid`, NEW.`name`, NEW.`subCategory`, NEW.`servingSizeDesc`); END"
+        ]
+      },
+      {
+        "tableName": "meal_logs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `userId` TEXT NOT NULL, `date` TEXT NOT NULL, `mealType` TEXT NOT NULL, `loggedAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mealType",
+            "columnName": "mealType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "loggedAt",
+            "columnName": "loggedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_meal_logs_userId_date",
+            "unique": false,
+            "columnNames": [
+              "userId",
+              "date"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meal_logs_userId_date` ON `${TABLE_NAME}` (`userId`, `date`)"
+          },
+          {
+            "name": "index_meal_logs_userId_date_mealType",
+            "unique": true,
+            "columnNames": [
+              "userId",
+              "date",
+              "mealType"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_meal_logs_userId_date_mealType` ON `${TABLE_NAME}` (`userId`, `date`, `mealType`)"
+          }
+        ]
+      },
+      {
+        "tableName": "meal_log_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mealLogId` INTEGER NOT NULL, `foodId` TEXT NOT NULL, `servings` REAL NOT NULL, `addedAt` INTEGER NOT NULL, FOREIGN KEY(`mealLogId`) REFERENCES `meal_logs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`foodId`) REFERENCES `food_items`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mealLogId",
+            "columnName": "mealLogId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "foodId",
+            "columnName": "foodId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "servings",
+            "columnName": "servings",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedAt",
+            "columnName": "addedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_meal_log_items_mealLogId",
+            "unique": false,
+            "columnNames": [
+              "mealLogId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meal_log_items_mealLogId` ON `${TABLE_NAME}` (`mealLogId`)"
+          },
+          {
+            "name": "index_meal_log_items_foodId",
+            "unique": false,
+            "columnNames": [
+              "foodId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meal_log_items_foodId` ON `${TABLE_NAME}` (`foodId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meal_logs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "mealLogId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "food_items",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "foodId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "daily_scores",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `date` TEXT NOT NULL, `heifaTotalScore` REAL NOT NULL, `vegetableScore` REAL NOT NULL, `fruitScore` REAL NOT NULL, `grainsScore` REAL NOT NULL, `wholegrainsScore` REAL NOT NULL, `meatAndAlternativeScore` REAL NOT NULL, `dairyScore` REAL NOT NULL, `waterScore` REAL NOT NULL, `saturatedFatScore` REAL NOT NULL, `unsaturatedFatScore` REAL NOT NULL, `sodiumScore` REAL NOT NULL, `sugarScore` REAL NOT NULL, `alcoholScore` REAL NOT NULL, `discretionaryScore` REAL NOT NULL, `totalCaloriesKcal` REAL NOT NULL, `totalProteinG` REAL NOT NULL, `totalCarbsG` REAL NOT NULL, `totalFatG` REAL NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`userId`, `date`))",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "heifaTotalScore",
+            "columnName": "heifaTotalScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vegetableScore",
+            "columnName": "vegetableScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fruitScore",
+            "columnName": "fruitScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "grainsScore",
+            "columnName": "grainsScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wholegrainsScore",
+            "columnName": "wholegrainsScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meatAndAlternativeScore",
+            "columnName": "meatAndAlternativeScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dairyScore",
+            "columnName": "dairyScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "waterScore",
+            "columnName": "waterScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "saturatedFatScore",
+            "columnName": "saturatedFatScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unsaturatedFatScore",
+            "columnName": "unsaturatedFatScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sodiumScore",
+            "columnName": "sodiumScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sugarScore",
+            "columnName": "sugarScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alcoholScore",
+            "columnName": "alcoholScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "discretionaryScore",
+            "columnName": "discretionaryScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalCaloriesKcal",
+            "columnName": "totalCaloriesKcal",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalProteinG",
+            "columnName": "totalProteinG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalCarbsG",
+            "columnName": "totalCarbsG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalFatG",
+            "columnName": "totalFatG",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "userId",
+            "date"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_daily_scores_date",
+            "unique": false,
+            "columnNames": [
+              "date"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_daily_scores_date` ON `${TABLE_NAME}` (`date`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '740c5c5b8e8379c43e1797b92f7c8f4b')"
+    ]
+  }
+}
