@@ -1,7 +1,5 @@
 package com.songshawn.nutritrack.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.songshawn.nutritrack.data.models.FoodCategory
@@ -25,31 +23,26 @@ class QuestionnaireViewModel @Inject constructor(
     private val infoRepo: QuestionnaireInfoRepository
 ) : ViewModel() {
 
-    // Current step index - Using LiveData for simple UI state
-    private val _currentStepIndex = MutableLiveData(0)
-    val currentStepIndex: LiveData<Int> = _currentStepIndex
+    private val _currentStepIndex = MutableStateFlow(0)
+    val currentStepIndex: StateFlow<Int> = _currentStepIndex.asStateFlow()
 
-    // Selected food categories - Using StateFlow for collection data
     private val _selectedCategories = MutableStateFlow<List<FoodCategory>>(emptyList())
     val selectedCategories: StateFlow<List<FoodCategory>> = _selectedCategories.asStateFlow()
 
-    // Selected persona - Using LiveData for simple UI state
-    private val _selectedPersona = MutableLiveData<Persona?>(null)
-    val selectedPersona: LiveData<Persona?> = _selectedPersona
+    private val _selectedPersona = MutableStateFlow<Persona?>(null)
+    val selectedPersona: StateFlow<Persona?> = _selectedPersona.asStateFlow()
 
-    // Time values - Using LiveData for simple UI state
-    private val _mealTime = MutableLiveData("12:00")
-    val mealTime: LiveData<String> = _mealTime
+    private val _mealTime = MutableStateFlow("12:00")
+    val mealTime: StateFlow<String> = _mealTime.asStateFlow()
 
-    private val _sleepTime = MutableLiveData("22:00")
-    val sleepTime: LiveData<String> = _sleepTime
+    private val _sleepTime = MutableStateFlow("22:00")
+    val sleepTime: StateFlow<String> = _sleepTime.asStateFlow()
 
-    private val _wakeTime = MutableLiveData("07:00")
-    val wakeTime: LiveData<String> = _wakeTime
+    private val _wakeTime = MutableStateFlow("07:00")
+    val wakeTime: StateFlow<String> = _wakeTime.asStateFlow()
 
-    // Error messages - Using LiveData for temporary messages
-    private val _errorMessage = MutableLiveData<String?>(null)
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     /**
      * Sets the current step index when page changes

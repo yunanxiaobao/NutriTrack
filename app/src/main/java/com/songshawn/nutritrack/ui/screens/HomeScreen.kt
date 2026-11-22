@@ -11,7 +11,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,10 +48,11 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    // Collect LiveData states
-    val totalScore by viewModel.totalScore.observeAsState(0)
-    val username by viewModel.username.observeAsState("")
-    val hasScores by viewModel.hasScores.observeAsState(true)
+    // Collect immutable StateFlow UI state
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val totalScore = uiState.totalScore
+    val username = uiState.username
+    val hasScores = uiState.hasScores
 
     // Check current screen orientation
     val configuration = LocalConfiguration.current

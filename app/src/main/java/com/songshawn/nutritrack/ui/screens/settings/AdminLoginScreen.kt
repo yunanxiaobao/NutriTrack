@@ -8,7 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -40,10 +40,10 @@ fun AdminLoginScreen(
     navController: NavController,
     viewModel: ClinicianViewModel = hiltViewModel()
 ) {
-    // Observe login state from ViewModel
-    val isLoginError by viewModel.isLoginError.observeAsState(false)
-    val loginErrorMessage by viewModel.loginErrorMessage.observeAsState("")
-    val isLoginSuccessful by viewModel.isLoginSuccessful.observeAsState(false)
+    // Observe login state from ViewModel StateFlow
+    val isLoginError by viewModel.isLoginError.collectAsStateWithLifecycle()
+    val loginErrorMessage by viewModel.loginErrorMessage.collectAsStateWithLifecycle()
+    val isLoginSuccessful by viewModel.isLoginSuccessful.collectAsStateWithLifecycle()
 
     // Password input state
     var password by remember { mutableStateOf("") }

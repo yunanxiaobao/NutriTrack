@@ -9,7 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,8 +44,8 @@ fun AccountScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     userId: String? = AuthenticationManager.getCurrentUserId()
 ) {
-    val userInfo by viewModel.userInfo.observeAsState()
-    val uiState by viewModel.uiState.observeAsState()
+    val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Dialog states
     var showDeleteDialog by remember { mutableStateOf(false) }

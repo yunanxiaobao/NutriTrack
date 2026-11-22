@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -62,7 +62,7 @@ fun WelcomeScreen(
     val authorName     = stringResource(R.string.author_name)
     val designedBy     = stringResource(R.string.designed_by, authorName)
 
-    val shouldNavigate by viewModel.navigateToLogin.observeAsState(initial = false)
+    val shouldNavigate by viewModel.navigateToLogin.collectAsStateWithLifecycle()
 
     LaunchedEffect(shouldNavigate) {
         if (shouldNavigate) {

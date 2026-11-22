@@ -1,14 +1,15 @@
 package com.songshawn.nutritrack.viewmodel
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.songshawn.nutritrack.data.models.UserInfo
 import com.songshawn.nutritrack.data.repository.PatientRepository
 import com.songshawn.nutritrack.util.AuthenticationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.FirebaseNetworkException
@@ -30,17 +31,14 @@ class SettingsViewModel @Inject constructor(
     private val tipRepository: NutriCoachTipRepository
 ) : ViewModel() {
 
-    // UI state management
-    private val _uiState = MutableLiveData<SettingsUiState>(SettingsUiState.Initial)
-    val uiState: LiveData<SettingsUiState> = _uiState
+    private val _uiState = MutableStateFlow<SettingsUiState>(SettingsUiState.Initial)
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    // User ID
-    private val _userId = MutableLiveData<String>()
-    val userId: LiveData<String> = _userId
+    private val _userId = MutableStateFlow<String?>(null)
+    val userId: StateFlow<String?> = _userId.asStateFlow()
 
-    // User information
-    private val _userInfo = MutableLiveData<UserInfo>()
-    val userInfo: LiveData<UserInfo> = _userInfo
+    private val _userInfo = MutableStateFlow<UserInfo?>(null)
+    val userInfo: StateFlow<UserInfo?> = _userInfo.asStateFlow()
 
     // Operation status flag
     private var isOperationInProgress = false

@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,10 +54,10 @@ fun QuestionnaireScreen(
 ) {
     // Collect states from ViewModel
     val categories by viewModel.selectedCategories.collectAsState()
-    val persona by viewModel.selectedPersona.observeAsState()
-    val mealTime by viewModel.mealTime.observeAsState("12:00")
-    val sleepTime by viewModel.sleepTime.observeAsState("22:00")
-    val wakeTime by viewModel.wakeTime.observeAsState("07:00")
+    val persona by viewModel.selectedPersona.collectAsStateWithLifecycle()
+    val mealTime by viewModel.mealTime.collectAsStateWithLifecycle()
+    val sleepTime by viewModel.sleepTime.collectAsStateWithLifecycle()
+    val wakeTime by viewModel.wakeTime.collectAsStateWithLifecycle()
     val steps = QuestionnaireStep.entries.toList()
 
     // Setup Pager State
@@ -80,7 +80,7 @@ fun QuestionnaireScreen(
 
     // Manage error messages with Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
-    val error by viewModel.errorMessage.observeAsState()
+    val error by viewModel.errorMessage.collectAsStateWithLifecycle()
 
     LaunchedEffect(error) {
         error?.let {

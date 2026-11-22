@@ -1,7 +1,5 @@
 package com.songshawn.nutritrack.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.songshawn.nutritrack.data.repository.CloudSyncRepository
@@ -9,12 +7,23 @@ import com.songshawn.nutritrack.data.repository.MealLoggingRepository
 import com.songshawn.nutritrack.data.repository.PatientRepository
 import com.songshawn.nutritrack.util.AuthenticationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
+data class HomeUiState(
+    val userId: String = "",
+    val username: String = "",
+    val totalScore: Int = 0,
+    val hasScores: Boolean = true,
+)
+
 /**
- * ViewModel for the Home screen displaying user profile and live HEIFA scores.
+ * ViewModel for the Home screen displaying user profile and live HEIFA scores via [StateFlow].
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -23,20 +32,11 @@ class HomeViewModel @Inject constructor(
     private val cloudSync: CloudSyncRepository,
 ) : ViewModel() {
 
-    private val _userId = MutableLiveData<String>()
-    val userId: LiveData<String> = _userId
-
-    private val _username = MutableLiveData<String>()
-    val username: LiveData<String> = _username
-
-    private val _totalScore = MutableLiveData(0)
-    val totalScore: LiveData<Int> = _totalScore
-
-    private val _hasScores = MutableLiveData(true)
-    val hasScores: LiveData<Boolean> = _hasScores
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     fun loadPatientData(userId: String) {
-        _userId.value = userId
+        _uiState.update { it.copy(userId = userId) }
         viewModelScope.launch {
             mealLoggingRepository.ensureCatalogSeeded()
             cloudSync.syncUserData(userId)
@@ -44,11 +44,18 @@ class HomeViewModel @Inject constructor(
             val patient = repository.getPatientById(userId)
 
             val resolvedScore = latestDaily?.heifaTotalScore ?: patient?.heifaTotalScore
-            _hasScores.value = resolvedScore != null
-            _username.value = patient?.name?.takeIf { it.isNotBlank() }
+            val resolvedName = patient?.name?.takeIf { it.isNotBlank() }
                 ?: AuthenticationManager.getCurrentDisplayName()
                 ?: "friend"
-            _totalScore.value = (resolvedScore ?: 0.0).roundToInt()
+
+            _uiState.update {
+                it.copy(
+                    userId = userId,
+                    username = resolvedName,
+                    totalScore = (resolvedScore ?: 0.0).roundToInt(),
+                    hasScores = resolvedScore != null,
+                )
+            }
         }
     }
 }
