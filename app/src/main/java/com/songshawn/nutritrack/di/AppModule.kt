@@ -1,6 +1,7 @@
 package com.songshawn.nutritrack.di
 
 import android.content.Context
+import com.songshawn.nutritrack.data.room.dao.AgentMemoryDao
 import com.songshawn.nutritrack.data.room.dao.DailyScoreDao
 import com.songshawn.nutritrack.data.room.dao.FoodCatalogDao
 import com.songshawn.nutritrack.data.room.dao.FruitCacheDao
@@ -9,6 +10,10 @@ import com.songshawn.nutritrack.data.room.dao.NutriCoachTipDao
 import com.songshawn.nutritrack.data.room.dao.PatientDao
 import com.songshawn.nutritrack.data.room.dao.QuestionnaireInfoDao
 import com.songshawn.nutritrack.data.room.database.NutriTrackDatabase
+import com.songshawn.nutritrack.domain.agent.LlmClient
+import com.songshawn.nutritrack.domain.agent.NutriCoachToolHost
+import com.songshawn.nutritrack.domain.agent.RoomNutriCoachToolHost
+import com.songshawn.nutritrack.domain.agent.ZhipuLlmClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,4 +64,17 @@ object AppModule {
     @Singleton
     fun provideDailyScoreDao(database: NutriTrackDatabase): DailyScoreDao =
         database.dailyScoreDao()
+
+    @Provides
+    @Singleton
+    fun provideAgentMemoryDao(database: NutriTrackDatabase): AgentMemoryDao =
+        database.agentMemoryDao()
+
+    @Provides
+    @Singleton
+    fun provideLlmClient(zhipuLlmClient: ZhipuLlmClient): LlmClient = zhipuLlmClient
+
+    @Provides
+    @Singleton
+    fun provideNutriCoachToolHost(host: RoomNutriCoachToolHost): NutriCoachToolHost = host
 }

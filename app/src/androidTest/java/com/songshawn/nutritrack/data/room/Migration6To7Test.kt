@@ -83,4 +83,26 @@ class Migration6To7Test {
         }
         migratedDb.close()
     }
+
+    @Test
+    fun migrate7To8_createsAgentMemoryAndSummaryTables() {
+        helper.createDatabase(testDbName, 7).close()
+        val migratedDb = helper.runMigrationsAndValidate(
+            testDbName,
+            8,
+            true,
+            NutriTrackDatabase.MIGRATION_7_8,
+        )
+        migratedDb.execSQL(
+            """
+            INSERT INTO agent_messages (userId, role, content, traceJson, createdAt)
+            VALUES ('u_legacy', 'USER', 'How is my score?', '[]', 1700000000)
+            """.trimIndent(),
+        )
+        migratedDb.query("SELECT content FROM agent_messages WHERE userId = 'u_legacy'").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("How is my score?", cursor.getString(0))
+        }
+        migratedDb.close()
+    }
 }

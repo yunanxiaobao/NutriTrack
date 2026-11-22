@@ -1,17 +1,23 @@
 package com.songshawn.nutritrack.util
 
+import com.google.gson.Gson
 import com.songshawn.nutritrack.data.models.FoodCategory
 import com.songshawn.nutritrack.data.models.Gender
 import com.songshawn.nutritrack.data.models.MealType
 import com.songshawn.nutritrack.data.models.Persona
 import com.songshawn.nutritrack.data.repository.MealLoggingRepository
 import com.songshawn.nutritrack.data.repository.PatientRepository
+import com.songshawn.nutritrack.data.room.dao.AgentMemoryDao
 import com.songshawn.nutritrack.data.room.dao.MealLogDao
 import com.songshawn.nutritrack.data.room.dao.NutriCoachTipDao
 import com.songshawn.nutritrack.data.room.dao.QuestionnaireInfoDao
+import com.songshawn.nutritrack.data.room.entity.AgentMessageEntity
 import com.songshawn.nutritrack.data.room.entity.NutriCoachTipEntity
 import com.songshawn.nutritrack.data.room.entity.PatientEntity
 import com.songshawn.nutritrack.data.room.entity.QuestionnaireInfoEntity
+import com.songshawn.nutritrack.domain.agent.FakeLlmClient
+import com.songshawn.nutritrack.domain.agent.LlmRole
+import com.songshawn.nutritrack.domain.agent.ToolCallTraceStep
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -30,6 +36,8 @@ class DemoPersonaSeeder @Inject constructor(
     private val mealLogDao: MealLogDao,
     private val questionnaireInfoDao: QuestionnaireInfoDao,
     private val nutriCoachTipDao: NutriCoachTipDao,
+    private val agentMemoryDao: AgentMemoryDao,
+    private val gson: Gson,
 ) {
     suspend fun seedIfNeeded() = withContext(Dispatchers.IO) {
         mealLoggingRepository.ensureCatalogSeeded()
@@ -41,6 +49,7 @@ class DemoPersonaSeeder @Inject constructor(
         seedDemoProfileAndQuestionnaire(demoUserId)
         seedThirtyDaysOfMeals(demoUserId)
         seedDemoTips(demoUserId)
+        seedDemoAgentConversation(demoUserId)
     }
 
     private suspend fun seedDemoProfileAndQuestionnaire(userId: String) {
@@ -172,5 +181,49 @@ class DemoPersonaSeeder @Inject constructor(
             ),
         )
         tips.forEach { nutriCoachTipDao.insertTip(it) }
+    }
+
+    private suspend fun seedDemoAgentConversation(userId: String) {
+        val now = System.currentTimeMillis()
+        agentMemoryDao.insertMessage(
+            AgentMessageEntity(
+                userId = userId,
+                role = LlmRole.USER.name,
+                content = "How is my HEIFA score today and which category should I focus on next?",
+                traceJson = "[]",
+                createdAt = now - 60_000L,
+            ),
+        )
+        val demoTraces = listOf(
+            ToolCallTraceStep(
+                stepIndex = 1,
+                toolCallId = "call_today_seed",
+                toolName = FakeLlmClient.TOOL_GET_TODAY_SUMMARY,
+                argumentsJson = "{}",
+                resultJson = """{"heifaTotalScore":88.5,"totalCaloriesKcal":1680,"proteinG":94,"carbsG":182,"fatG":58}""",
+                durationMs = 14L,
+            ),
+            ToolCallTraceStep(
+                stepIndex = 1,
+                toolCallId = "call_score_seed",
+                toolName = FakeLlmClient.TOOL_GET_SCORE_BREAKDOWN,
+                argumentsJson = "{}",
+                resultJson = """{"heifaTotalScore":88.5,"lowestComponents":["Grains & Cereals (3.8/5)","Dairy & Alternatives (8.0/10)"]}""",
+                durationMs = 11L,
+            ),
+        )
+        agentMemoryDao.insertMessage(
+            AgentMessageEntity(
+                userId = userId,
+                role = LlmRole.ASSISTANT.name,
+                content = "Your live HEIFA score today is **88.5 / 100** (1,680 kcal, 94g protein).\n\n" +
+                    "- **Top Strengths:** Vegetables (10/10 across 4 sub-categories), " +
+                    "Fruits (10/10), Whole Grains (5/5), and Water (5/5).\n" +
+                    "- **Next Opportunity:** Your total **Grains & Cereals** is at 3.8/5. " +
+                    "Adding one extra half-cup serve of brown rice or quinoa will lift your score above 90.",
+                traceJson = gson.toJson(demoTraces),
+                createdAt = now - 55_000L,
+            ),
+        )
     }
 }

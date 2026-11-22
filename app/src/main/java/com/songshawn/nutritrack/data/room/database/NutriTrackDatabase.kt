@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.songshawn.nutritrack.data.room.dao.AgentMemoryDao
 import com.songshawn.nutritrack.data.room.dao.DailyScoreDao
 import com.songshawn.nutritrack.data.room.dao.FoodCatalogDao
 import com.songshawn.nutritrack.data.room.dao.FruitCacheDao
@@ -14,6 +15,8 @@ import com.songshawn.nutritrack.data.room.dao.MealLogDao
 import com.songshawn.nutritrack.data.room.dao.NutriCoachTipDao
 import com.songshawn.nutritrack.data.room.dao.PatientDao
 import com.songshawn.nutritrack.data.room.dao.QuestionnaireInfoDao
+import com.songshawn.nutritrack.data.room.entity.AgentMessageEntity
+import com.songshawn.nutritrack.data.room.entity.AgentSessionSummaryEntity
 import com.songshawn.nutritrack.data.room.entity.DailyScoreEntity
 import com.songshawn.nutritrack.data.room.entity.FoodItemEntity
 import com.songshawn.nutritrack.data.room.entity.FoodItemFtsEntity
@@ -37,8 +40,10 @@ import com.songshawn.nutritrack.util.Converters
         MealLogEntity::class,
         MealLogItemEntity::class,
         DailyScoreEntity::class,
+        AgentMessageEntity::class,
+        AgentSessionSummaryEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -50,6 +55,7 @@ abstract class NutriTrackDatabase : RoomDatabase() {
     abstract fun foodCatalogDao(): FoodCatalogDao
     abstract fun mealLogDao(): MealLogDao
     abstract fun dailyScoreDao(): DailyScoreDao
+    abstract fun agentMemoryDao(): AgentMemoryDao
 
     companion object {
         @Volatile
@@ -211,6 +217,42 @@ abstract class NutriTrackDatabase : RoomDatabase() {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_daily_scores_date` ON `daily_scores` (`date`)")
         }
 
+        /**
+         * Migration 7 -> 8: Adds persistent NutriCoach agent conversation history (`agent_messages`)
+         * and rolling session summaries (`agent_session_summaries`).
+         */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `agent_messages` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `userId` TEXT NOT NULL,
+                        `role` TEXT NOT NULL,
+                        `content` TEXT NOT NULL,
+                        `traceJson` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_agent_messages_userId_createdAt` " +
+                        "ON `agent_messages` (`userId`, `createdAt`)",
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `agent_session_summaries` (
+                        `userId` TEXT NOT NULL,
+                        `summaryText` TEXT NOT NULL,
+                        `summarizedMessageCount` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`userId`)
+                    )
+                    """.trimIndent(),
+                )
+            }
+        }
+
         fun getDatabase(context: Context): NutriTrackDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -218,7 +260,7 @@ abstract class NutriTrackDatabase : RoomDatabase() {
                     NutriTrackDatabase::class.java,
                     Constants.DATABASE_NAME,
                 )
-                    .addMigrations(MIGRATION_3_4, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_3_4, MIGRATION_6_7, MIGRATION_7_8)
                     .build()
                 INSTANCE = instance
                 instance
