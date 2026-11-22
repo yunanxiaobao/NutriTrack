@@ -62,6 +62,7 @@ import kotlin.math.roundToInt
 
 private val QUICK_AGENT_PROMPTS = listOf(
     "How is my HEIFA score today and which category is lowest?",
+    "What is the ADG dietary guideline on sodium limit and wholegrain serves?",
     "Log 1 serve of Baked Atlantic Salmon for lunch",
     "Search high-protein foods like tofu or salmon in the catalog",
     "What are my questionnaire preferences and persona?",
@@ -177,7 +178,7 @@ private fun AgentHeaderBar(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = "6 tools • parallel async/awaitAll • Room memory • write confirmation",
+                        text = "7 tools (incl. on-device ADG RAG citations) • async/awaitAll • write confirmation",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

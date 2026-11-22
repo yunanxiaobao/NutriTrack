@@ -10,6 +10,7 @@ import com.songshawn.nutritrack.data.repository.MealLoggingRepository
 import com.songshawn.nutritrack.data.repository.PatientRepository
 import com.songshawn.nutritrack.data.repository.QuestionnaireInfoRepository
 import com.songshawn.nutritrack.data.room.entity.toScoreList
+import com.songshawn.nutritrack.domain.rag.DietaryGuidelinesRagEngine
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -86,6 +87,12 @@ class RoomNutriCoachToolHost @Inject constructor(
             requiresConfirmation = false,
         ),
         ToolDefinition(
+            name = FakeLlmClient.TOOL_RETRIEVE_DIETARY_GUIDELINES,
+            description = "Semantic vector RAG retrieval over the Australian Dietary Guidelines (ADG 2013) with citations.",
+            parametersSchema = schemaWithRequiredString("query", "Nutrition guideline topic or question"),
+            requiresConfirmation = false,
+        ),
+        ToolDefinition(
             name = FakeLlmClient.TOOL_LOG_MEAL,
             description = "Propose logging a food item into the user's meal log (requires user confirmation before writing).",
             parametersSchema = logMealSchema(),
@@ -101,6 +108,7 @@ class RoomNutriCoachToolHost @Inject constructor(
             FakeLlmClient.TOOL_SEARCH_FOOD_CATALOG -> executeSearchFoodCatalog(args)
             FakeLlmClient.TOOL_LOOKUP_FRUIT_NUTRITION -> executeLookupFruit(args)
             FakeLlmClient.TOOL_GET_USER_PREFERENCES -> executeGetUserPreferences(userId)
+            FakeLlmClient.TOOL_RETRIEVE_DIETARY_GUIDELINES -> executeRetrieveDietaryGuidelines(args)
             else -> """{"error":"Unknown read-only tool '${call.name}'"}"""
         }
     }
@@ -266,6 +274,19 @@ class RoomNutriCoachToolHost @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun executeRetrieveDietaryGuidelines(args: JsonObject): String {
+        val query = args.get("query")?.asString.orEmpty()
+        val retrieved = DietaryGuidelinesRagEngine.retrieve(query, topK = 3).map { hit ->
+            mapOf(
+                "citation" to hit.chunk.citationTag,
+                "section" to hit.chunk.sectionTitle,
+                "similarityScore" to hit.score,
+                "guideline" to hit.chunk.content,
+            )
+        }
+        return gson.toJson(mapOf("query" to query, "citations" to retrieved))
     }
 
     private fun parseJsonArgs(raw: String): JsonObject = try {

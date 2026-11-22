@@ -32,7 +32,7 @@ the others.
 - [x] Conversation memory in Room with summarisation
 - [x] Visible tool-call trace in the chat UI
 - [x] Tool-selection evaluation set
-- [ ] (Optional) on-device RAG over dietary guidelines with citations
+- [x] (Optional) on-device RAG over dietary guidelines with citations
 
 ## Phase 3 — Move the API key off the device
 

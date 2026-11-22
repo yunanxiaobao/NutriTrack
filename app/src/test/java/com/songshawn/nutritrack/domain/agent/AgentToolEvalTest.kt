@@ -89,6 +89,12 @@ class AgentToolEvalTest {
             expectedTools = setOf(FakeLlmClient.TOOL_LOG_MEAL),
             expectedArgumentSubstring = "BREAKFAST",
         ),
+        EvalCase(
+            id = "eval_13_rag_dietary_guideline_sodium",
+            userPrompt = "What is the ADG guideline for daily sodium limit?",
+            expectedTools = setOf(FakeLlmClient.TOOL_RETRIEVE_DIETARY_GUIDELINES),
+            expectedArgumentSubstring = "sodium",
+        ),
     )
 
     @Test

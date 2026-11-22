@@ -115,6 +115,7 @@ class FakeLlmClient(
         const val TOOL_SEARCH_FOOD_CATALOG = "search_food_catalog"
         const val TOOL_LOOKUP_FRUIT_NUTRITION = "lookup_fruit_nutrition"
         const val TOOL_GET_USER_PREFERENCES = "get_user_preferences"
+        const val TOOL_RETRIEVE_DIETARY_GUIDELINES = "retrieve_dietary_guidelines"
         const val TOOL_LOG_MEAL = "log_meal"
 
         private val WRITE_ACTION_REGEX = Regex("""\b(log|record|ate)\b|add to (breakfast|lunch|dinner)|had for (breakfast|lunch|dinner)""")
@@ -163,6 +164,14 @@ class FakeLlmClient(
             "quinoa",
             "salmon",
         )
+        private val GUIDELINE_RAG_KEYWORDS = listOf(
+            "guideline",
+            "adg",
+            "recommended serve",
+            "sodium limit",
+            "why wholegrain",
+            "saturated fat limit",
+        )
 
         /**
          * Deterministic intent router that maps natural-language nutrition queries to the
@@ -178,6 +187,7 @@ class FakeLlmClient(
                 matchScoreBreakdownTool(lower),
                 matchPreferencesTool(lower),
                 matchCatalogSearchTool(lower),
+                matchDietaryGuidelinesRagTool(lower, prompt),
             )
         }
 
@@ -250,6 +260,16 @@ class FakeLlmClient(
                 id = "call_search_1",
                 name = TOOL_SEARCH_FOOD_CATALOG,
                 argumentsJson = """{"query":"$query"}""",
+            )
+        }
+
+        private fun matchDietaryGuidelinesRagTool(lower: String, rawPrompt: String): ToolCall? {
+            if (!lower.containsAny(GUIDELINE_RAG_KEYWORDS)) return null
+            val safeQuery = rawPrompt.replace("\"", "").take(120)
+            return ToolCall(
+                id = "call_rag_1",
+                name = TOOL_RETRIEVE_DIETARY_GUIDELINES,
+                argumentsJson = """{"query":"$safeQuery"}""",
             )
         }
 
