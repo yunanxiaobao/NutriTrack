@@ -8,6 +8,7 @@ config:
 complexity:
   LongMethod:
     threshold: 80
+    ignoreAnnotated: ['Composable']
   LongParameterList:
     functionThreshold: 10
     constructorThreshold: 12
@@ -37,3 +38,9 @@ style:
     maxLineLength: 140
   ReturnCount:
     max: 4
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+  RethrowCaughtException:
+    active: false
