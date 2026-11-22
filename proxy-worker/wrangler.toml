@@ -1,0 +1,10 @@
+name = "nutritrack-llm-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+[vars]
+FIREBASE_PROJECT_ID = "nutritrack-e74f6"
+RATE_LIMIT_PER_MINUTE = "20"
+
+# Set the Zhipu API key secret via Wrangler CLI (never commit secrets here):
+#   npx wrangler secret put ZHIPU_API_KEY
