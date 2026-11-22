@@ -32,10 +32,13 @@ class GenAIRepository @Inject constructor(
     private val apiService: GenAIApiService,
 ) {
     private val gson = Gson()
+    internal var bearerTokenProvider: suspend () -> String? = {
+        AuthenticationManager.resolveLlmBearerHeader()
+    }
 
     /** Single-shot text completion. */
     suspend fun generateText(prompt: String): ApiResult<String> = withContext(Dispatchers.IO) {
-        val bearer = AuthenticationManager.resolveLlmBearerHeader()
+        val bearer = bearerTokenProvider()
         if (bearer == null) {
             if (DemoDataConfig.isEnabled) {
                 delay(180L)
@@ -70,7 +73,7 @@ class GenAIRepository @Inject constructor(
      * Streams a text completion via Server-Sent Events (or simulated chunks in offline demo mode).
      */
     fun streamText(prompt: String): Flow<StreamResult> = flow {
-        val bearer = AuthenticationManager.resolveLlmBearerHeader()
+        val bearer = bearerTokenProvider()
         if (bearer == null) {
             if (DemoDataConfig.isEnabled) {
                 val fullText = buildDemoCoachingResponse(prompt)
